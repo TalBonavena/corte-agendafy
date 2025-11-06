@@ -102,21 +102,49 @@ export default function ClientDashboard() {
       const dateStr = format(newAppointment.date, "yyyy-MM-dd");
       
       // Buscar agendamentos existentes para o barbeiro e data selecionados
-      const { data, error } = await supabase
+      const { data: appointments, error: appointmentsError } = await supabase
         .from("appointments")
         .select("scheduled_time")
         .eq("barber", newAppointment.barber)
         .eq("scheduled_date", dateStr)
-        .neq("status", "cancelado"); // Não considerar agendamentos cancelados
+        .neq("status", "cancelado");
 
-      if (error) throw error;
+      if (appointmentsError) throw appointmentsError;
 
-      // Criar set com horários ocupados
-      const occupied = new Set(data?.map((apt) => apt.scheduled_time) || []);
-      setBookedSlots(occupied);
+      // Buscar bloqueios para o barbeiro e data selecionados
+      const { data: blocks, error: blocksError } = await supabase
+        .from("barber_blocks")
+        .select("*")
+        .eq("barber", newAppointment.barber)
+        .eq("block_date", dateStr);
+
+      if (blocksError) throw blocksError;
+
+      // Criar set com horários ocupados por agendamentos
+      const occupiedByAppointments = new Set(appointments?.map((apt) => apt.scheduled_time) || []);
+
+      // Adicionar horários bloqueados
+      const occupiedByBlocks = new Set<string>();
+      blocks?.forEach((block) => {
+        if (block.is_full_day) {
+          // Se o dia inteiro está bloqueado, marcar todos os horários como ocupados
+          TIME_SLOTS.forEach((slot) => occupiedByBlocks.add(slot));
+        } else if (block.start_time && block.end_time) {
+          // Bloquear horários entre start_time e end_time
+          TIME_SLOTS.forEach((slot) => {
+            if (slot >= block.start_time && slot <= block.end_time) {
+              occupiedByBlocks.add(slot);
+            }
+          });
+        }
+      });
+
+      // Combinar todos os horários ocupados
+      const allOccupied = new Set([...occupiedByAppointments, ...occupiedByBlocks]);
+      setBookedSlots(allOccupied);
 
       // Filtrar horários disponíveis
-      const available = TIME_SLOTS.filter((slot) => !occupied.has(slot));
+      const available = TIME_SLOTS.filter((slot) => !allOccupied.has(slot));
       setAvailableSlots(available);
     } catch (error: any) {
       toast.error("Erro ao carregar horários disponíveis");

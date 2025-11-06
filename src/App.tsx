@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientsManagement from "./pages/ClientsManagement";
+import BarberScheduleBlocks from "./pages/BarberScheduleBlocks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="gerente">
                   <ClientsManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bloqueios-horarios"
+              element={
+                <ProtectedRoute requiredRole="gerente">
+                  <BarberScheduleBlocks />
                 </ProtectedRoute>
               }
             />

@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      barber_blocks: {
+        Row: {
+          barber: string
+          block_date: string
+          created_at: string
+          created_by: string | null
+          end_time: string | null
+          id: string
+          is_full_day: boolean
+          reason: string | null
+          start_time: string | null
+        }
+        Insert: {
+          barber: string
+          block_date: string
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          id?: string
+          is_full_day?: boolean
+          reason?: string | null
+          start_time?: string | null
+        }
+        Update: {
+          barber?: string
+          block_date?: string
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          id?: string
+          is_full_day?: boolean
+          reason?: string | null
+          start_time?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

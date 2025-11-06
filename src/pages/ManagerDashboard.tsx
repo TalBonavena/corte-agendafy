@@ -18,7 +18,8 @@ import {
   CheckCircle,
   XCircle,
   Edit,
-  Trash2
+  Trash2,
+  Ban
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -385,13 +386,31 @@ export default function ManagerDashboard() {
           <TabsContent value="products">
             <Card className="glass-panel">
               <CardHeader>
-                <CardTitle>Produtos e Serviços</CardTitle>
-                <CardDescription>Em breve: Gerenciamento de produtos</CardDescription>
+                <CardTitle>Serviços e Horários</CardTitle>
+                <CardDescription>Gerencie os serviços e bloqueios de horários</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-center text-muted-foreground py-8">
-                  Funcionalidade em desenvolvimento
-                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="text-center py-8 border border-border rounded-lg bg-card/50">
+                    <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      Serviços disponíveis já configurados
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {SERVICES.length} serviços cadastrados
+                    </p>
+                  </div>
+                  <div className="text-center py-8 border border-border rounded-lg bg-card/50">
+                    <Clock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      Configure bloqueios de horários e folgas dos barbeiros
+                    </p>
+                    <Button onClick={() => navigate("/bloqueios-horarios")} className="btn-futuristic">
+                      <Ban className="mr-2 h-4 w-4" />
+                      Gerenciar Bloqueios
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
