@@ -12,7 +12,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { SERVICES, formatServiceDisplay } from "@/lib/services";
 
 interface Appointment {
   id: string;
@@ -201,13 +203,22 @@ export default function ClientDashboard() {
               <form onSubmit={handleCreateAppointment} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="service">Serviço</Label>
-                  <Input
-                    id="service"
-                    placeholder="Ex: Corte + Barba"
+                  <Select
                     value={newAppointment.service}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, service: e.target.value })}
+                    onValueChange={(value) => setNewAppointment({ ...newAppointment, service: value })}
                     required
-                  />
+                  >
+                    <SelectTrigger id="service">
+                      <SelectValue placeholder="Selecione um serviço" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVICES.map((service) => (
+                        <SelectItem key={service.name} value={service.name}>
+                          {formatServiceDisplay(service)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

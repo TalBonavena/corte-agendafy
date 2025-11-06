@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calendar, 
   Users, 
@@ -24,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { SERVICES, formatServiceDisplay } from "@/lib/services";
 
 interface Appointment {
   id: string;
@@ -406,12 +408,21 @@ export default function ManagerDashboard() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="service">Serviço</Label>
-              <Input
-                id="service"
+              <Select
                 value={editForm.service}
-                onChange={(e) => setEditForm({ ...editForm, service: e.target.value })}
-                placeholder="Ex: Corte + Barba"
-              />
+                onValueChange={(value) => setEditForm({ ...editForm, service: value })}
+              >
+                <SelectTrigger id="service">
+                  <SelectValue placeholder="Selecione um serviço" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SERVICES.map((service) => (
+                    <SelectItem key={service.name} value={service.name}>
+                      {formatServiceDisplay(service)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
