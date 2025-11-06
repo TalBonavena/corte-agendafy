@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 import { SERVICES, formatServiceDisplay } from "@/lib/services";
 
 interface Appointment {
@@ -41,6 +42,7 @@ interface Appointment {
 
 export default function ManagerDashboard() {
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -357,12 +359,19 @@ export default function ManagerDashboard() {
             <Card className="glass-panel">
               <CardHeader>
                 <CardTitle>Clientes</CardTitle>
-                <CardDescription>Em breve: Lista de clientes cadastrados</CardDescription>
+                <CardDescription>Gerencie os clientes cadastrados</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-center text-muted-foreground py-8">
-                  Funcionalidade em desenvolvimento
-                </p>
+                <div className="text-center py-8">
+                  <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">
+                    Visualize o histórico completo de atendimentos e informações de contato dos clientes
+                  </p>
+                  <Button onClick={() => navigate("/gerenciar-clientes")} className="btn-futuristic">
+                    <Users className="mr-2 h-4 w-4" />
+                    Gerenciar Clientes
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

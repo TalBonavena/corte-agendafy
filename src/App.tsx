@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientsManagement from "./pages/ClientsManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="cliente">
                   <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gerenciar-clientes"
+              element={
+                <ProtectedRoute requiredRole="gerente">
+                  <ClientsManagement />
                 </ProtectedRoute>
               }
             />
