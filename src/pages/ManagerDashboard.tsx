@@ -1,6 +1,11 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Calendar, 
@@ -10,7 +15,9 @@ import {
   LogOut,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +45,14 @@ export default function ManagerDashboard() {
     totalAppointments: 0,
     todayAppointments: 0,
     pendingAppointments: 0,
+  });
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    service: "",
+    scheduled_date: "",
+    scheduled_time: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -122,6 +137,59 @@ export default function ManagerDashboard() {
       fetchStats();
     } catch (error: any) {
       toast.error("Erro ao atualizar status");
+    }
+  };
+
+  const handleEditClick = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setEditForm({
+      service: appointment.service,
+      scheduled_date: appointment.scheduled_date,
+      scheduled_time: appointment.scheduled_time,
+      notes: appointment.notes || "",
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingAppointment) return;
+
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({
+          service: editForm.service,
+          scheduled_date: editForm.scheduled_date,
+          scheduled_time: editForm.scheduled_time,
+          notes: editForm.notes,
+        })
+        .eq("id", editingAppointment.id);
+
+      if (error) throw error;
+
+      toast.success("Agendamento atualizado com sucesso!");
+      setEditingAppointment(null);
+      fetchAppointments();
+      fetchStats();
+    } catch (error: any) {
+      toast.error("Erro ao atualizar agendamento");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Agendamento excluído com sucesso!");
+      setDeleteConfirmId(null);
+      fetchAppointments();
+      fetchStats();
+    } catch (error: any) {
+      toast.error("Erro ao excluir agendamento");
     }
   };
 
@@ -230,7 +298,7 @@ export default function ManagerDashboard() {
                           )}
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             size="sm"
                             variant={appointment.status === "agendado" ? "default" : "outline"}
@@ -256,6 +324,23 @@ export default function ManagerDashboard() {
                           >
                             <XCircle className="mr-1 h-3 w-3" />
                             Cancelar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditClick(appointment)}
+                            className="btn-futuristic"
+                          >
+                            <Edit className="mr-1 h-3 w-3" />
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => setDeleteConfirmId(appointment.id)}
+                          >
+                            <Trash2 className="mr-1 h-3 w-3" />
+                            Excluir
                           </Button>
                         </div>
                       </div>
@@ -309,6 +394,83 @@ export default function ManagerDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <Dialog open={!!editingAppointment} onOpenChange={(open) => !open && setEditingAppointment(null)}>
+        <DialogContent className="glass-panel">
+          <DialogHeader>
+            <DialogTitle>Editar Agendamento</DialogTitle>
+            <DialogDescription>
+              Modifique os detalhes do agendamento de {editingAppointment?.client_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="service">Serviço</Label>
+              <Input
+                id="service"
+                value={editForm.service}
+                onChange={(e) => setEditForm({ ...editForm, service: e.target.value })}
+                placeholder="Ex: Corte + Barba"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="date">Data</Label>
+              <Input
+                id="date"
+                type="date"
+                value={editForm.scheduled_date}
+                onChange={(e) => setEditForm({ ...editForm, scheduled_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time">Horário</Label>
+              <Input
+                id="time"
+                type="time"
+                value={editForm.scheduled_time}
+                onChange={(e) => setEditForm({ ...editForm, scheduled_time: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                placeholder="Observações adicionais..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingAppointment(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleEditSave} className="btn-futuristic">
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+        <AlertDialogContent className="glass-panel">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
