@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
+          barber: string
           client_id: string
           created_at: string
           id: string
@@ -27,6 +28,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          barber?: string
           client_id: string
           created_at?: string
           id?: string
@@ -38,6 +40,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          barber?: string
           client_id?: string
           created_at?: string
           id?: string

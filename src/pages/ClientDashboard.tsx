@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { SERVICES, formatServiceDisplay } from "@/lib/services";
+import { BARBERS, TIME_SLOTS } from "@/lib/barbers";
 
 interface Appointment {
   id: string;
@@ -23,6 +24,7 @@ interface Appointment {
   scheduled_time: string;
   status: string;
   notes: string | null;
+  barber: string;
 }
 
 interface Profile {
@@ -37,15 +39,24 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [newAppointment, setNewAppointment] = useState({
     service: "",
+    barber: "",
     date: undefined as Date | undefined,
     time: "",
     notes: "",
   });
+  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
   useEffect(() => {
     fetchProfile();
     fetchAppointments();
   }, [user]);
+
+  useEffect(() => {
+    if (newAppointment.barber && newAppointment.date) {
+      fetchAvailableSlots();
+    }
+  }, [newAppointment.barber, newAppointment.date]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -84,10 +95,38 @@ export default function ClientDashboard() {
     }
   };
 
+  const fetchAvailableSlots = async () => {
+    if (!newAppointment.barber || !newAppointment.date) return;
+
+    try {
+      const dateStr = format(newAppointment.date, "yyyy-MM-dd");
+      
+      // Buscar agendamentos existentes para o barbeiro e data selecionados
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("scheduled_time")
+        .eq("barber", newAppointment.barber)
+        .eq("scheduled_date", dateStr)
+        .neq("status", "cancelado"); // Não considerar agendamentos cancelados
+
+      if (error) throw error;
+
+      // Criar set com horários ocupados
+      const occupied = new Set(data?.map((apt) => apt.scheduled_time) || []);
+      setBookedSlots(occupied);
+
+      // Filtrar horários disponíveis
+      const available = TIME_SLOTS.filter((slot) => !occupied.has(slot));
+      setAvailableSlots(available);
+    } catch (error: any) {
+      toast.error("Erro ao carregar horários disponíveis");
+    }
+  };
+
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !newAppointment.date) {
+    if (!user || !newAppointment.date || !newAppointment.barber) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return;
     }
@@ -96,6 +135,7 @@ export default function ClientDashboard() {
       const { error } = await supabase.from("appointments").insert({
         client_id: user.id,
         service: newAppointment.service,
+        barber: newAppointment.barber,
         scheduled_date: format(newAppointment.date, "yyyy-MM-dd"),
         scheduled_time: newAppointment.time,
         notes: newAppointment.notes || null,
@@ -104,7 +144,8 @@ export default function ClientDashboard() {
       if (error) throw error;
 
       toast.success("Agendamento realizado com sucesso!");
-      setNewAppointment({ service: "", date: undefined, time: "", notes: "" });
+      setNewAppointment({ service: "", barber: "", date: undefined, time: "", notes: "" });
+      setAvailableSlots([]);
       fetchAppointments();
     } catch (error: any) {
       toast.error("Erro ao criar agendamento");
@@ -222,6 +263,29 @@ export default function ClientDashboard() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="barber">Barbeiro</Label>
+                  <Select
+                    value={newAppointment.barber}
+                    onValueChange={(value) => {
+                      setNewAppointment({ ...newAppointment, barber: value, time: "" });
+                      setAvailableSlots([]);
+                    }}
+                    required
+                  >
+                    <SelectTrigger id="barber">
+                      <SelectValue placeholder="Selecione um barbeiro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BARBERS.map((barber) => (
+                        <SelectItem key={barber} value={barber}>
+                          {barber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label>Data</Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -244,7 +308,10 @@ export default function ClientDashboard() {
                       <Calendar
                         mode="single"
                         selected={newAppointment.date}
-                        onSelect={(date) => setNewAppointment({ ...newAppointment, date })}
+                        onSelect={(date) => {
+                          setNewAppointment({ ...newAppointment, date, time: "" });
+                          setAvailableSlots([]);
+                        }}
                         disabled={(date) => date < new Date()}
                         initialFocus
                       />
@@ -254,13 +321,32 @@ export default function ClientDashboard() {
 
                 <div className="space-y-2">
                   <Label htmlFor="time">Horário</Label>
-                  <Input
-                    id="time"
-                    type="time"
-                    value={newAppointment.time}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, time: e.target.value })}
-                    required
-                  />
+                  {!newAppointment.barber || !newAppointment.date ? (
+                    <p className="text-sm text-muted-foreground">
+                      Selecione um barbeiro e uma data primeiro
+                    </p>
+                  ) : availableSlots.length === 0 ? (
+                    <p className="text-sm text-red-500">
+                      Sem horários disponíveis para esta data
+                    </p>
+                  ) : (
+                    <Select
+                      value={newAppointment.time}
+                      onValueChange={(value) => setNewAppointment({ ...newAppointment, time: value })}
+                      required
+                    >
+                      <SelectTrigger id="time">
+                        <SelectValue placeholder="Selecione um horário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSlots.map((slot) => (
+                          <SelectItem key={slot} value={slot}>
+                            {slot}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -303,6 +389,9 @@ export default function ClientDashboard() {
                           {getStatusText(appointment.status)}
                         </span>
                       </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        <strong>Barbeiro:</strong> {appointment.barber}
+                      </p>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <CalendarIcon className="h-3 w-3" />

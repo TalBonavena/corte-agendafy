@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { SERVICES, formatServiceDisplay } from "@/lib/services";
+import { BARBERS, TIME_SLOTS } from "@/lib/barbers";
 
 interface Appointment {
   id: string;
@@ -36,6 +37,7 @@ interface Appointment {
   scheduled_time: string;
   status: string;
   notes: string | null;
+  barber: string;
   client_name?: string;
   client_email?: string;
 }
@@ -54,6 +56,7 @@ export default function ManagerDashboard() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     service: "",
+    barber: "",
     scheduled_date: "",
     scheduled_time: "",
     notes: "",
@@ -148,6 +151,7 @@ export default function ManagerDashboard() {
     setEditingAppointment(appointment);
     setEditForm({
       service: appointment.service,
+      barber: appointment.barber,
       scheduled_date: appointment.scheduled_date,
       scheduled_time: appointment.scheduled_time,
       notes: appointment.notes || "",
@@ -162,6 +166,7 @@ export default function ManagerDashboard() {
         .from("appointments")
         .update({
           service: editForm.service,
+          barber: editForm.barber,
           scheduled_date: editForm.scheduled_date,
           scheduled_time: editForm.scheduled_time,
           notes: editForm.notes,
@@ -295,6 +300,7 @@ export default function ManagerDashboard() {
                         
                         <div className="mb-3">
                           <p className="text-sm"><strong>Serviço:</strong> {appointment.service}</p>
+                          <p className="text-sm"><strong>Barbeiro:</strong> {appointment.barber}</p>
                           {appointment.notes && (
                             <p className="text-sm text-muted-foreground mt-1">
                               <strong>Observações:</strong> {appointment.notes}
@@ -434,6 +440,24 @@ export default function ManagerDashboard() {
               </Select>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="barber">Barbeiro</Label>
+              <Select
+                value={editForm.barber}
+                onValueChange={(value) => setEditForm({ ...editForm, barber: value })}
+              >
+                <SelectTrigger id="barber">
+                  <SelectValue placeholder="Selecione um barbeiro" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BARBERS.map((barber) => (
+                    <SelectItem key={barber} value={barber}>
+                      {barber}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
               <Input
                 id="date"
@@ -444,12 +468,21 @@ export default function ManagerDashboard() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="time">Horário</Label>
-              <Input
-                id="time"
-                type="time"
+              <Select
                 value={editForm.scheduled_time}
-                onChange={(e) => setEditForm({ ...editForm, scheduled_time: e.target.value })}
-              />
+                onValueChange={(value) => setEditForm({ ...editForm, scheduled_time: value })}
+              >
+                <SelectTrigger id="time">
+                  <SelectValue placeholder="Selecione um horário" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_SLOTS.map((slot) => (
+                    <SelectItem key={slot} value={slot}>
+                      {slot}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notes">Observações</Label>

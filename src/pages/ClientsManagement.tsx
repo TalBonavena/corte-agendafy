@@ -27,6 +27,7 @@ interface Appointment {
   scheduled_time: string;
   status: string;
   notes: string | null;
+  barber: string;
 }
 
 interface ClientWithStats extends Client {
@@ -338,6 +339,9 @@ export default function ClientsManagement() {
                                       {getStatusText(appointment.status)}
                                     </Badge>
                                   </div>
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    <strong>Barbeiro:</strong> {appointment.barber}
+                                  </p>
                                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                     <span className="flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
