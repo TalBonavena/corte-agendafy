@@ -120,8 +120,10 @@ export default function ClientDashboard() {
 
       if (blocksError) throw blocksError;
 
-      // Criar set com horários ocupados por agendamentos
-      const occupiedByAppointments = new Set(appointments?.map((apt) => apt.scheduled_time) || []);
+      // Criar set com horários ocupados por agendamentos (normalizar formato HH:MM:SS para HH:MM)
+      const occupiedByAppointments = new Set(
+        appointments?.map((apt) => apt.scheduled_time.substring(0, 5)) || []
+      );
 
       // Adicionar horários bloqueados
       const occupiedByBlocks = new Set<string>();
@@ -130,9 +132,11 @@ export default function ClientDashboard() {
           // Se o dia inteiro está bloqueado, marcar todos os horários como ocupados
           TIME_SLOTS.forEach((slot) => occupiedByBlocks.add(slot));
         } else if (block.start_time && block.end_time) {
-          // Bloquear horários entre start_time e end_time
+          // Bloquear horários entre start_time e end_time (normalizar formato)
+          const startTime = block.start_time.substring(0, 5);
+          const endTime = block.end_time.substring(0, 5);
           TIME_SLOTS.forEach((slot) => {
-            if (slot >= block.start_time && slot <= block.end_time) {
+            if (slot >= startTime && slot <= endTime) {
               occupiedByBlocks.add(slot);
             }
           });
