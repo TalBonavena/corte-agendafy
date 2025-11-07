@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar as CalendarIcon, LogOut, Clock, User, Mail } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -46,6 +46,9 @@ export default function ClientDashboard() {
   });
   const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  
+  // Ref para armazenar valores atuais para os callbacks realtime
+  const appointmentRef = useRef(newAppointment);
 
   useEffect(() => {
     fetchProfile();
@@ -53,6 +56,9 @@ export default function ClientDashboard() {
   }, [user]);
 
   useEffect(() => {
+    // Atualizar ref com valores atuais
+    appointmentRef.current = newAppointment;
+    
     if (newAppointment.barber && newAppointment.date) {
       fetchAvailableSlots();
     }
@@ -61,7 +67,7 @@ export default function ClientDashboard() {
   useEffect(() => {
     // Configurar realtime para appointments
     const appointmentsChannel = supabase
-      .channel('appointments-changes')
+      .channel('appointments-realtime')
       .on(
         'postgres_changes',
         {
@@ -70,11 +76,10 @@ export default function ClientDashboard() {
           table: 'appointments'
         },
         (payload) => {
-          console.log('Appointment change detected:', payload);
-          // Atualizar lista de agendamentos do usuário
+          console.log('🔄 Appointment change detected:', payload);
           fetchAppointments();
-          // Atualizar horários disponíveis se estiver visualizando alguma data
-          if (newAppointment.barber && newAppointment.date) {
+          // Usar ref para ter valores atualizados
+          if (appointmentRef.current.barber && appointmentRef.current.date) {
             fetchAvailableSlots();
           }
         }
@@ -83,7 +88,7 @@ export default function ClientDashboard() {
 
     // Configurar realtime para barber_blocks
     const blocksChannel = supabase
-      .channel('blocks-changes')
+      .channel('blocks-realtime')
       .on(
         'postgres_changes',
         {
@@ -92,9 +97,9 @@ export default function ClientDashboard() {
           table: 'barber_blocks'
         },
         (payload) => {
-          console.log('Block change detected:', payload);
-          // Atualizar horários disponíveis se estiver visualizando alguma data
-          if (newAppointment.barber && newAppointment.date) {
+          console.log('🔄 Block change detected:', payload);
+          // Usar ref para ter valores atualizados
+          if (appointmentRef.current.barber && appointmentRef.current.date) {
             fetchAvailableSlots();
           }
         }
@@ -106,7 +111,7 @@ export default function ClientDashboard() {
       supabase.removeChannel(appointmentsChannel);
       supabase.removeChannel(blocksChannel);
     };
-  }, [newAppointment.barber, newAppointment.date]);
+  }, []);
 
   const fetchProfile = async () => {
     if (!user) return;
