@@ -52,6 +52,30 @@ export default function BarberScheduleBlocks() {
     fetchBlocks();
   }, []);
 
+  useEffect(() => {
+    // Configurar realtime para barber_blocks
+    const channel = supabase
+      .channel('barber-blocks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'barber_blocks'
+        },
+        (payload) => {
+          console.log('Barber block change detected:', payload);
+          fetchBlocks();
+        }
+      )
+      .subscribe();
+
+    // Cleanup
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const fetchBlocks = async () => {
     try {
       const { data, error } = await supabase

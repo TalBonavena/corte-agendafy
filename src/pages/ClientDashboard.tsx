@@ -58,6 +58,56 @@ export default function ClientDashboard() {
     }
   }, [newAppointment.barber, newAppointment.date]);
 
+  useEffect(() => {
+    // Configurar realtime para appointments
+    const appointmentsChannel = supabase
+      .channel('appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          console.log('Appointment change detected:', payload);
+          // Atualizar lista de agendamentos do usuário
+          fetchAppointments();
+          // Atualizar horários disponíveis se estiver visualizando alguma data
+          if (newAppointment.barber && newAppointment.date) {
+            fetchAvailableSlots();
+          }
+        }
+      )
+      .subscribe();
+
+    // Configurar realtime para barber_blocks
+    const blocksChannel = supabase
+      .channel('blocks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'barber_blocks'
+        },
+        (payload) => {
+          console.log('Block change detected:', payload);
+          // Atualizar horários disponíveis se estiver visualizando alguma data
+          if (newAppointment.barber && newAppointment.date) {
+            fetchAvailableSlots();
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup ao desmontar componente
+    return () => {
+      supabase.removeChannel(appointmentsChannel);
+      supabase.removeChannel(blocksChannel);
+    };
+  }, [newAppointment.barber, newAppointment.date]);
+
   const fetchProfile = async () => {
     if (!user) return;
     

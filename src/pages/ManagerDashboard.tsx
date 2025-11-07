@@ -68,6 +68,31 @@ export default function ManagerDashboard() {
     fetchStats();
   }, []);
 
+  useEffect(() => {
+    // Configurar realtime para appointments - atualizar quando houver mudanças
+    const channel = supabase
+      .channel('manager-appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          console.log('Appointment change detected in manager panel:', payload);
+          fetchAppointments();
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    // Cleanup
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const fetchAppointments = async () => {
     try {
       // Fetch appointments

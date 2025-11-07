@@ -52,6 +52,30 @@ export default function ClientsManagement() {
   }, []);
 
   useEffect(() => {
+    // Configurar realtime para appointments - atualizar dados dos clientes
+    const channel = supabase
+      .channel('clients-appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          console.log('Appointment change detected in clients management:', payload);
+          fetchClients();
+        }
+      )
+      .subscribe();
+
+    // Cleanup
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
     if (searchTerm === "") {
       setFilteredClients(clients);
     } else {
