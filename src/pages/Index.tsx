@@ -42,7 +42,7 @@ const Index = () => {
               className="btn-futuristic text-lg px-8" 
               onClick={() => navigate("/auth")}
             >
-              Acessar Sistema
+              AGENDAMENTO
             </Button>
           </div>
         </div>
