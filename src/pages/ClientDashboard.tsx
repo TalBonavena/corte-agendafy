@@ -16,6 +16,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { SERVICES, formatServiceDisplay } from "@/lib/services";
 import { BARBERS, TIME_SLOTS } from "@/lib/barbers";
+import { z } from "zod";
+
+// Validation schema for appointment creation
+const appointmentSchema = z.object({
+  service: z.string().trim().min(1, "Selecione um serviço").max(100, "Nome do serviço muito longo"),
+  barber: z.string().trim().min(1, "Selecione um barbeiro"),
+  date: z.date({ required_error: "Selecione uma data" }),
+  time: z.string().trim().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, "Horário inválido"),
+  notes: z.string().trim().max(500, "Observações devem ter no máximo 500 caracteres").optional(),
+});
 
 interface Appointment {
   id: string;
@@ -213,19 +223,29 @@ export default function ClientDashboard() {
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !newAppointment.date || !newAppointment.barber) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
+    if (!user) {
+      toast.error("Usuário não autenticado");
       return;
     }
 
+    // Validate appointment data with Zod schema
     try {
-      const { error } = await supabase.from("appointments").insert({
-        client_id: user.id,
+      const validatedData = appointmentSchema.parse({
         service: newAppointment.service,
         barber: newAppointment.barber,
-        scheduled_date: format(newAppointment.date, "yyyy-MM-dd"),
-        scheduled_time: newAppointment.time,
-        notes: newAppointment.notes || null,
+        date: newAppointment.date,
+        time: newAppointment.time,
+        notes: newAppointment.notes,
+      });
+
+      // Insert validated data
+      const { error } = await supabase.from("appointments").insert({
+        client_id: user.id,
+        service: validatedData.service,
+        barber: validatedData.barber,
+        scheduled_date: format(validatedData.date, "yyyy-MM-dd"),
+        scheduled_time: validatedData.time,
+        notes: validatedData.notes || null,
       });
 
       if (error) throw error;
@@ -235,7 +255,13 @@ export default function ClientDashboard() {
       setAvailableSlots([]);
       fetchAppointments();
     } catch (error: any) {
-      toast.error("Erro ao criar agendamento");
+      if (error instanceof z.ZodError) {
+        // Display first validation error
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Erro ao criar agendamento");
+      }
     }
   };
 
