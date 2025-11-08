@@ -33,7 +33,6 @@ export default function Auth() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "cliente" as "gerente" | "cliente",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -76,7 +75,7 @@ export default function Auth() {
     try {
       signupSchema.parse(signupData);
       setIsLoading(true);
-      await signUp(signupData.email, signupData.password, signupData.name, signupData.role);
+      await signUp(signupData.email, signupData.password, signupData.name);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -208,23 +207,6 @@ export default function Auth() {
                       required
                     />
                     {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Tipo de Usuário</Label>
-                    <RadioGroup
-                      value={signupData.role}
-                      onValueChange={(value) => setSignupData({ ...signupData, role: value as "gerente" | "cliente" })}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="cliente" id="cliente" />
-                        <Label htmlFor="cliente" className="font-normal">Cliente</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="gerente" id="gerente" />
-                        <Label htmlFor="gerente" className="font-normal">Gerente</Label>
-                      </div>
-                    </RadioGroup>
                   </div>
 
                   <Button type="submit" className="w-full btn-futuristic" disabled={isLoading}>
