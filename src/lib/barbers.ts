@@ -1,5 +1,29 @@
-export const BARBERS = ["Lucas", "Luis Felipe"] as const;
+import lucasPhoto from "@/assets/barber-lucas.jpeg";
+
+export interface BarberInfo {
+  name: string;
+  photo?: string;
+  specialty?: string;
+}
+
+export const BARBERS_INFO: BarberInfo[] = [
+  {
+    name: "Lucas",
+    photo: lucasPhoto,
+    specialty: "Especialista em cortes modernos e barba",
+  },
+  {
+    name: "Luis Felipe",
+    specialty: "Expert em pigmentação e mechas",
+  },
+];
+
+export const BARBERS = BARBERS_INFO.map(b => b.name);
 export type Barber = typeof BARBERS[number];
+
+export const getBarberInfo = (name: string): BarberInfo | undefined => {
+  return BARBERS_INFO.find(b => b.name === name);
+};
 
 // Horários disponíveis (09:00 às 19:00)
 export const generateTimeSlots = (): string[] => {

@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { SERVICES, formatServiceDisplay } from "@/lib/services";
-import { BARBERS, TIME_SLOTS } from "@/lib/barbers";
+import { BARBERS, TIME_SLOTS, getBarberInfo } from "@/lib/barbers";
 import { z } from "zod";
 import logo from "@/assets/logo.jpeg";
 
@@ -495,6 +495,29 @@ export default function ClientDashboard() {
                       ))}
                     </SelectContent>
                   </Select>
+                  
+                  {newAppointment.barber && (() => {
+                    const barberInfo = getBarberInfo(newAppointment.barber);
+                    return barberInfo ? (
+                      <div className="mt-3 p-4 rounded-lg bg-card/50 border border-border">
+                        <div className="flex items-center gap-4">
+                          {barberInfo.photo && (
+                            <img
+                              src={barberInfo.photo}
+                              alt={barberInfo.name}
+                              className="w-20 h-20 rounded-full object-cover border-2 border-primary"
+                            />
+                          )}
+                          <div>
+                            <h4 className="font-semibold text-lg">{barberInfo.name}</h4>
+                            {barberInfo.specialty && (
+                              <p className="text-sm text-muted-foreground">{barberInfo.specialty}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
 
                 <div className="space-y-2">
