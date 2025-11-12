@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Calendar as CalendarIcon, LogOut, Clock, User, Mail, XCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar as CalendarIcon, LogOut, Clock, User, Mail, XCircle, Phone, Edit } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,7 +43,17 @@ interface Appointment {
 interface Profile {
   name: string;
   email: string;
+  phone: string | null;
 }
+
+const profileSchema = z.object({
+  name: z.string().trim().min(2, "Nome deve ter no mínimo 2 caracteres").max(100, "Nome muito longo"),
+  phone: z.string()
+    .trim()
+    .regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, "Telefone inválido. Use o formato (99) 99999-9999")
+    .optional()
+    .or(z.literal("")),
+});
 
 export default function ClientDashboard() {
   const { signOut, user } = useAuth();
@@ -59,6 +70,11 @@ export default function ClientDashboard() {
   const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    phone: "",
+  });
   
   // Ref para armazenar valores atuais para os callbacks realtime
   const appointmentRef = useRef(newAppointment);
@@ -132,12 +148,16 @@ export default function ClientDashboard() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("name, email")
+        .select("name, email, phone")
         .eq("id", user.id)
         .single();
 
       if (error) throw error;
       setProfile(data);
+      setProfileForm({
+        name: data.name || "",
+        phone: data.phone || "",
+      });
     } catch (error: any) {
       toast.error("Erro ao carregar perfil");
     }
@@ -311,6 +331,55 @@ export default function ClientDashboard() {
     }
   };
 
+  const formatPhoneInput = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneInput(e.target.value);
+    setProfileForm({ ...profileForm, phone: formatted });
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
+    try {
+      const validatedData = profileSchema.parse({
+        name: profileForm.name,
+        phone: profileForm.phone || undefined,
+      });
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          name: validatedData.name,
+          phone: validatedData.phone || null,
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Perfil atualizado com sucesso!");
+      setIsEditProfileOpen(false);
+      fetchProfile();
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Erro ao atualizar perfil");
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <header className="border-b border-border glass-panel sticky top-0 z-10">
@@ -333,11 +402,20 @@ export default function ClientDashboard() {
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8 max-w-md">
           <Card className="glass-panel">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
                 Meu Perfil
               </CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsEditProfileOpen(true)}
+                className="btn-futuristic"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </Button>
             </CardHeader>
             <CardContent className="space-y-2">
               {profile && (
@@ -350,6 +428,18 @@ export default function ClientDashboard() {
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span>{profile.email}</span>
                   </div>
+                  {profile.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{profile.phone}</span>
+                    </div>
+                  )}
+                  {!profile.phone && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Phone className="h-4 w-4" />
+                      <span className="italic">Telefone não cadastrado</span>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>
@@ -563,6 +653,63 @@ export default function ClientDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+        <DialogContent className="glass-panel">
+          <DialogHeader>
+            <DialogTitle>Editar Perfil</DialogTitle>
+            <DialogDescription>
+              Atualize suas informações pessoais
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome Completo *</Label>
+              <Input
+                id="edit-name"
+                value={profileForm.name}
+                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Telefone</Label>
+              <Input
+                id="edit-phone"
+                placeholder="(99) 99999-9999"
+                value={profileForm.phone}
+                onChange={handlePhoneChange}
+                maxLength={15}
+              />
+              <p className="text-xs text-muted-foreground">
+                Formato: (99) 99999-9999
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input
+                value={profile?.email || ""}
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground">
+                O e-mail não pode ser alterado
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditProfileOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="btn-futuristic">
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
