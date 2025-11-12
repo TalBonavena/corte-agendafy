@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { SERVICES, formatServiceDisplay } from "@/lib/services";
 import { BARBERS, TIME_SLOTS } from "@/lib/barbers";
 import { z } from "zod";
+import logo from "@/assets/logo.jpeg";
 
 // Validation schema for appointment creation
 const appointmentSchema = z.object({
@@ -295,7 +296,14 @@ export default function ClientDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <header className="border-b border-border glass-panel sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Meu Painel</h1>
+          <div className="flex items-center gap-4">
+            <img 
+              src={logo} 
+              alt="Logo Barbearia Master" 
+              className="w-12 h-12 object-contain pulse-glow border-2 border-white rounded-xl p-2 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
+            />
+            <h1 className="text-2xl font-bold">Meu Painel</h1>
+          </div>
           <Button variant="outline" onClick={signOut} className="btn-futuristic">
             <LogOut className="mr-2 h-4 w-4" />
             Sair

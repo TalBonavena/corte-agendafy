@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Scissors, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
+import logo from "@/assets/logo.jpeg";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -94,11 +95,13 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-secondary">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
-            <Scissors className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-3xl font-bold mb-2">Barbearia Master</h1>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <img 
+            src={logo} 
+            alt="Logo Barbearia Master" 
+            className="w-32 h-32 object-contain mb-4 pulse-glow border-4 border-white rounded-2xl p-4 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
+          />
+          <h1 className="text-3xl font-bold mb-2">Innovation Barbershop</h1>
           <p className="text-muted-foreground">Sistema de Agendamento Profissional</p>
         </div>
 
