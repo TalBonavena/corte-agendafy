@@ -89,6 +89,92 @@ export type Database = {
         }
         Relationships: []
       }
+      product_sales: {
+        Row: {
+          cost_price: number
+          id: string
+          notes: string | null
+          product_id: string
+          profit: number
+          quantity: number
+          sale_price: number
+          sold_at: string
+          sold_by: string
+          total_cost: number
+          total_sale: number
+        }
+        Insert: {
+          cost_price: number
+          id?: string
+          notes?: string | null
+          product_id: string
+          profit: number
+          quantity: number
+          sale_price: number
+          sold_at?: string
+          sold_by: string
+          total_cost: number
+          total_sale: number
+        }
+        Update: {
+          cost_price?: number
+          id?: string
+          notes?: string | null
+          product_id?: string
+          profit?: number
+          quantity?: number
+          sale_price?: number
+          sold_at?: string
+          sold_by?: string
+          total_cost?: number
+          total_sale?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          cost_price: number
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sale_price: number
+          stock_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          cost_price: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sale_price: number
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          cost_price?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sale_price?: number
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

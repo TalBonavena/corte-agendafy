@@ -30,6 +30,9 @@ import { useNavigate } from "react-router-dom";
 import { SERVICES, formatServiceDisplay } from "@/lib/services";
 import { BARBERS, TIME_SLOTS } from "@/lib/barbers";
 import logo from "@/assets/logo.jpeg";
+import ProductsManagement from "@/components/ProductsManagement";
+import BillingReport from "@/components/BillingReport";
+import ProductSale from "@/components/ProductSale";
 
 interface Appointment {
   id: string;
@@ -416,50 +419,42 @@ export default function ManagerDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="products">
+          <TabsContent value="products" className="space-y-6">
             <Card className="glass-panel">
               <CardHeader>
-                <CardTitle>Serviços e Horários</CardTitle>
-                <CardDescription>Gerencie os serviços e bloqueios de horários</CardDescription>
+                <CardTitle>Gestão de Produtos</CardTitle>
+                <CardDescription>Cadastre e gerencie os produtos vendidos na barbearia</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="text-center py-8 border border-border rounded-lg bg-card/50">
-                    <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-4">
-                      Serviços disponíveis já configurados
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {SERVICES.length} serviços cadastrados
-                    </p>
-                  </div>
-                  <div className="text-center py-8 border border-border rounded-lg bg-card/50">
-                    <Clock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-4">
-                      Configure bloqueios de horários e folgas dos barbeiros
-                    </p>
-                    <Button onClick={() => navigate("/bloqueios-horarios")} className="btn-futuristic">
-                      <Ban className="mr-2 h-4 w-4" />
-                      Gerenciar Bloqueios
-                    </Button>
-                  </div>
+                <div className="mb-4 flex justify-end">
+                  <ProductSale />
+                </div>
+                <ProductsManagement />
+              </CardContent>
+            </Card>
+
+            <Card className="glass-panel">
+              <CardHeader>
+                <CardTitle>Bloqueios de Horários</CardTitle>
+                <CardDescription>Configure folgas e indisponibilidades dos barbeiros</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Clock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">
+                    Configure bloqueios de horários e folgas dos barbeiros
+                  </p>
+                  <Button onClick={() => navigate("/bloqueios-horarios")} className="btn-futuristic">
+                    <Ban className="mr-2 h-4 w-4" />
+                    Gerenciar Bloqueios
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="billing">
-            <Card className="glass-panel">
-              <CardHeader>
-                <CardTitle>Faturamento</CardTitle>
-                <CardDescription>Em breve: Relatórios financeiros</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center text-muted-foreground py-8">
-                  Funcionalidade em desenvolvimento
-                </p>
-              </CardContent>
-            </Card>
+            <BillingReport />
           </TabsContent>
         </Tabs>
       </main>
