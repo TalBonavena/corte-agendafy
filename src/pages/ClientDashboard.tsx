@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar as CalendarIcon, LogOut, Clock, User, Mail } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Calendar as CalendarIcon, LogOut, Clock, User, Mail, XCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,6 +58,7 @@ export default function ClientDashboard() {
   });
   const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   
   // Ref para armazenar valores atuais para os callbacks realtime
   const appointmentRef = useRef(newAppointment);
@@ -292,6 +294,23 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleCancelAppointment = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: "cancelado" })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Agendamento cancelado com sucesso!");
+      setCancelConfirmId(null);
+      fetchAppointments();
+    } catch (error: any) {
+      toast.error("Erro ao cancelar agendamento");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <header className="border-b border-border glass-panel sticky top-0 z-10">
@@ -495,7 +514,7 @@ export default function ClientDashboard() {
                       <p className="text-sm text-muted-foreground mb-2">
                         <strong>Barbeiro:</strong> {appointment.barber}
                       </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                         <span className="flex items-center gap-1">
                           <CalendarIcon className="h-3 w-3" />
                           {format(new Date(appointment.scheduled_date), "dd/MM/yyyy")}
@@ -506,7 +525,18 @@ export default function ClientDashboard() {
                         </span>
                       </div>
                       {appointment.notes && (
-                        <p className="text-sm text-muted-foreground mt-2">{appointment.notes}</p>
+                        <p className="text-sm text-muted-foreground mb-3">{appointment.notes}</p>
+                      )}
+                      {appointment.status === "agendado" && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setCancelConfirmId(appointment.id)}
+                          className="w-full"
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Cancelar Agendamento
+                        </Button>
                       )}
                     </div>
                   ))}
@@ -516,6 +546,23 @@ export default function ClientDashboard() {
           </Card>
         </div>
       </main>
+
+      <AlertDialog open={!!cancelConfirmId} onOpenChange={(open) => !open && setCancelConfirmId(null)}>
+        <AlertDialogContent className="glass-panel">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Cancelamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não, manter agendamento</AlertDialogCancel>
+            <AlertDialogAction onClick={() => cancelConfirmId && handleCancelAppointment(cancelConfirmId)}>
+              Sim, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
