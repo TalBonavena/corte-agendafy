@@ -20,7 +20,8 @@ import {
   Edit,
   Trash2,
   Ban,
-  MessageCircle
+  MessageCircle,
+  Settings
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ import logo from "@/assets/logo.jpeg";
 import ProductsManagement from "@/components/ProductsManagement";
 import BillingReport from "@/components/BillingReport";
 import ProductSale from "@/components/ProductSale";
+import WhatsAppSettings from "@/components/WhatsAppSettings";
 
 interface Appointment {
   id: string;
@@ -235,7 +237,7 @@ export default function ManagerDashboard() {
     }
   };
 
-  const handleSendWhatsAppReminder = (appointment: Appointment) => {
+  const handleSendWhatsAppReminder = async (appointment: Appointment) => {
     if (!appointment.client_phone) {
       toast.error("Cliente não possui telefone cadastrado");
       return;
@@ -250,39 +252,65 @@ export default function ManagerDashboard() {
       return;
     }
 
-    // Formatar a data e hora
-    const dataFormatada = format(new Date(appointment.scheduled_date), "dd/MM/yyyy", { locale: ptBR });
-    const horaFormatada = appointment.scheduled_time.substring(0, 5); // HH:MM
+    try {
+      // Buscar template personalizado
+      const { data: settingData, error: settingError } = await supabase
+        .from("settings")
+        .select("value")
+        .eq("key", "whatsapp_message_template")
+        .single();
 
-    // Criar mensagem personalizada
-    const mensagem = `Olá ${appointment.client_name}! 👋
+      if (settingError && settingError.code !== "PGRST116") {
+        console.error("Error fetching template:", settingError);
+      }
+
+      // Template padrão caso não exista no banco
+      const defaultTemplate = `Olá {{nome}}! 👋
 
 Este é um lembrete do seu agendamento na *Innovation Barbershop*:
 
-📅 *Data:* ${dataFormatada}
-🕐 *Horário:* ${horaFormatada}
-✂️ *Serviço:* ${appointment.service}
-💈 *Barbeiro:* ${appointment.barber}
+📅 *Data:* {{data}}
+🕐 *Horário:* {{hora}}
+✂️ *Serviço:* {{servico}}
+💈 *Barbeiro:* {{barbeiro}}
 
 Contamos com sua presença!
 
 Se precisar reagendar, entre em contato conosco.`;
 
-    // Codificar a mensagem para URL
-    const mensagemCodificada = encodeURIComponent(mensagem);
+      const template = settingData?.value || defaultTemplate;
 
-    // Detectar se é mobile ou desktop
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    // URL do WhatsApp (com código do país +55 para Brasil)
-    const whatsappUrl = isMobile
-      ? `https://wa.me/55${phoneNumber}?text=${mensagemCodificada}`
-      : `https://web.whatsapp.com/send?phone=55${phoneNumber}&text=${mensagemCodificada}`;
+      // Formatar a data e hora
+      const dataFormatada = format(new Date(appointment.scheduled_date), "dd/MM/yyyy", { locale: ptBR });
+      const horaFormatada = appointment.scheduled_time.substring(0, 5);
 
-    // Abrir WhatsApp em nova aba
-    window.open(whatsappUrl, "_blank");
-    
-    toast.success("Abrindo WhatsApp...");
+      // Substituir variáveis no template
+      const mensagem = template
+        .replace(/\{\{nome\}\}/g, appointment.client_name || "Cliente")
+        .replace(/\{\{data\}\}/g, dataFormatada)
+        .replace(/\{\{hora\}\}/g, horaFormatada)
+        .replace(/\{\{servico\}\}/g, appointment.service)
+        .replace(/\{\{barbeiro\}\}/g, appointment.barber);
+
+      // Codificar a mensagem para URL
+      const mensagemCodificada = encodeURIComponent(mensagem);
+
+      // Detectar se é mobile ou desktop
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      // URL do WhatsApp (com código do país +55 para Brasil)
+      const whatsappUrl = isMobile
+        ? `https://wa.me/55${phoneNumber}?text=${mensagemCodificada}`
+        : `https://web.whatsapp.com/send?phone=55${phoneNumber}&text=${mensagemCodificada}`;
+
+      // Abrir WhatsApp em nova aba
+      window.open(whatsappUrl, "_blank");
+      
+      toast.success("Abrindo WhatsApp...");
+    } catch (error) {
+      console.error("Error sending WhatsApp reminder:", error);
+      toast.error("Erro ao preparar mensagem");
+    }
   };
 
   return (
@@ -338,7 +366,7 @@ Se precisar reagendar, entre em contato conosco.`;
         </div>
 
         <Tabs defaultValue="appointments" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 glass-panel">
+          <TabsList className="grid w-full grid-cols-5 glass-panel">
             <TabsTrigger value="appointments">
               <Calendar className="mr-2 h-4 w-4" />
               Agendamentos
@@ -354,6 +382,10 @@ Se precisar reagendar, entre em contato conosco.`;
             <TabsTrigger value="billing">
               <DollarSign className="mr-2 h-4 w-4" />
               Faturamento
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="mr-2 h-4 w-4" />
+              Configurações
             </TabsTrigger>
           </TabsList>
 
@@ -519,6 +551,10 @@ Se precisar reagendar, entre em contato conosco.`;
 
           <TabsContent value="billing">
             <BillingReport />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <WhatsAppSettings />
           </TabsContent>
         </Tabs>
       </main>
