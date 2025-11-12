@@ -7,6 +7,7 @@ import { DollarSign, TrendingUp, Package, Scissors } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getServicePrice } from "@/lib/services";
+import { BARBERS } from "@/lib/barbers";
 
 interface BillingStats {
   servicesRevenue: number;
@@ -30,10 +31,11 @@ export default function BillingReport() {
     totalProfit: 0,
   });
   const [selectedPeriod, setSelectedPeriod] = useState("current");
+  const [selectedBarber, setSelectedBarber] = useState<string>("all");
 
   useEffect(() => {
     fetchBillingStats();
-  }, [selectedPeriod]);
+  }, [selectedPeriod, selectedBarber]);
 
   const getPeriodDates = () => {
     const now = new Date();
@@ -70,12 +72,19 @@ export default function BillingReport() {
       const { startDate, endDate } = getPeriodDates();
 
       // Buscar receita de serviços (agendamentos concluídos)
-      const { data: appointments, error: appointmentsError } = await supabase
+      let appointmentsQuery = supabase
         .from("appointments")
-        .select("service")
+        .select("service, barber")
         .eq("status", "concluido")
         .gte("scheduled_date", startDate)
         .lte("scheduled_date", endDate);
+
+      // Aplicar filtro por barbeiro se selecionado
+      if (selectedBarber !== "all") {
+        appointmentsQuery = appointmentsQuery.eq("barber", selectedBarber);
+      }
+
+      const { data: appointments, error: appointmentsError } = await appointmentsQuery;
 
       if (appointmentsError) throw appointmentsError;
 
@@ -122,35 +131,58 @@ export default function BillingReport() {
 
   const getPeriodLabel = () => {
     const now = new Date();
+    let periodText = "";
+    
     switch (selectedPeriod) {
       case "current":
-        return format(now, "MMMM 'de' yyyy", { locale: ptBR });
+        periodText = format(now, "MMMM 'de' yyyy", { locale: ptBR });
+        break;
       case "last":
-        return format(subMonths(now, 1), "MMMM 'de' yyyy", { locale: ptBR });
+        periodText = format(subMonths(now, 1), "MMMM 'de' yyyy", { locale: ptBR });
+        break;
       case "all":
-        return "Todo o período";
+        periodText = "Todo o período";
+        break;
       default:
-        return "";
+        periodText = "";
     }
+
+    const barberText = selectedBarber === "all" ? "Todos os barbeiros" : selectedBarber;
+    return `${periodText} • ${barberText}`;
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h3 className="text-lg font-semibold">Relatório de Faturamento</h3>
           <p className="text-sm text-muted-foreground capitalize">{getPeriodLabel()}</p>
         </div>
-        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="current">Mês Atual</SelectItem>
-            <SelectItem value="last">Mês Anterior</SelectItem>
-            <SelectItem value="all">Todo o Período</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={selectedBarber} onValueChange={setSelectedBarber}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrar por barbeiro" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border-border">
+              <SelectItem value="all">Todos os barbeiros</SelectItem>
+              {BARBERS.map((barber) => (
+                <SelectItem key={barber} value={barber}>
+                  {barber}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-background border-border">
+              <SelectItem value="current">Mês Atual</SelectItem>
+              <SelectItem value="last">Mês Anterior</SelectItem>
+              <SelectItem value="all">Todo o Período</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {loading ? (
