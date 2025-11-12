@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DollarSign, TrendingUp, Package, Scissors } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getServicePrice } from "@/lib/services";
 
 interface BillingStats {
   servicesRevenue: number;
@@ -78,18 +79,9 @@ export default function BillingReport() {
 
       if (appointmentsError) throw appointmentsError;
 
-      // Calcular receita de serviços baseado nos preços fixos
-      const servicePrices: { [key: string]: number } = {
-        "Corte Simples": 30,
-        "Corte + Barba": 50,
-        "Barba": 25,
-        "Corte Infantil": 25,
-        "Pigmentação": 40,
-        "Luzes/Mechas": 80,
-      };
-
+      // Calcular receita de serviços usando os preços do catálogo
       const servicesRevenue = appointments?.reduce((total, apt) => {
-        return total + (servicePrices[apt.service] || 0);
+        return total + getServicePrice(apt.service);
       }, 0) || 0;
 
       // Buscar vendas de produtos

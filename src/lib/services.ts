@@ -21,3 +21,16 @@ export const SERVICES: Service[] = [
 export const formatServiceDisplay = (service: Service): string => {
   return `${service.name} - ${service.duration} - ${service.price}`;
 };
+
+export const getServicePrice = (serviceName: string): number => {
+  const service = SERVICES.find(s => s.name === serviceName);
+  if (!service) return 0;
+  
+  // Extrair número do formato "R$ X,XX"
+  const priceString = service.price.replace("R$", "").replace(",", ".").trim();
+  return parseFloat(priceString);
+};
+
+export const getServiceByName = (serviceName: string): Service | undefined => {
+  return SERVICES.find(s => s.name === serviceName);
+};

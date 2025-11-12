@@ -29,7 +29,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { SERVICES, formatServiceDisplay } from "@/lib/services";
+import { SERVICES, formatServiceDisplay, getServicePrice } from "@/lib/services";
 import { BARBERS, TIME_SLOTS } from "@/lib/barbers";
 import logo from "@/assets/logo.jpeg";
 import ProductsManagement from "@/components/ProductsManagement";
@@ -421,7 +421,12 @@ Se precisar reagendar, entre em contato conosco.`;
                         </div>
                         
                         <div className="mb-3">
-                          <p className="text-sm"><strong>Serviço:</strong> {appointment.service}</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm"><strong>Serviço:</strong> {appointment.service}</p>
+                            <p className="text-sm font-semibold text-primary">
+                              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(getServicePrice(appointment.service))}
+                            </p>
+                          </div>
                           <p className="text-sm"><strong>Barbeiro:</strong> {appointment.barber}</p>
                           {appointment.notes && (
                             <p className="text-sm text-muted-foreground mt-1">
