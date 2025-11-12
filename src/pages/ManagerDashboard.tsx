@@ -19,7 +19,8 @@ import {
   XCircle,
   Edit,
   Trash2,
-  Ban
+  Ban,
+  MessageCircle
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ interface Appointment {
   barber: string;
   client_name?: string;
   client_email?: string;
+  client_phone?: string | null;
 }
 
 export default function ManagerDashboard() {
@@ -111,7 +113,7 @@ export default function ManagerDashboard() {
       // Fetch all profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, email");
+        .select("id, name, email, phone");
 
       if (profilesError) throw profilesError;
 
@@ -122,6 +124,7 @@ export default function ManagerDashboard() {
           ...appointment,
           client_name: profile?.name || "Desconhecido",
           client_email: profile?.email || "",
+          client_phone: profile?.phone || null,
         };
       }) || [];
 
@@ -230,6 +233,56 @@ export default function ManagerDashboard() {
     } catch (error: any) {
       toast.error("Erro ao excluir agendamento");
     }
+  };
+
+  const handleSendWhatsAppReminder = (appointment: Appointment) => {
+    if (!appointment.client_phone) {
+      toast.error("Cliente não possui telefone cadastrado");
+      return;
+    }
+
+    // Remover formatação do telefone (deixar apenas números)
+    const phoneNumber = appointment.client_phone.replace(/\D/g, "");
+    
+    // Validar se tem 11 dígitos (DDD + número)
+    if (phoneNumber.length !== 11) {
+      toast.error("Telefone inválido");
+      return;
+    }
+
+    // Formatar a data e hora
+    const dataFormatada = format(new Date(appointment.scheduled_date), "dd/MM/yyyy", { locale: ptBR });
+    const horaFormatada = appointment.scheduled_time.substring(0, 5); // HH:MM
+
+    // Criar mensagem personalizada
+    const mensagem = `Olá ${appointment.client_name}! 👋
+
+Este é um lembrete do seu agendamento na *Innovation Barbershop*:
+
+📅 *Data:* ${dataFormatada}
+🕐 *Horário:* ${horaFormatada}
+✂️ *Serviço:* ${appointment.service}
+💈 *Barbeiro:* ${appointment.barber}
+
+Contamos com sua presença!
+
+Se precisar reagendar, entre em contato conosco.`;
+
+    // Codificar a mensagem para URL
+    const mensagemCodificada = encodeURIComponent(mensagem);
+
+    // Detectar se é mobile ou desktop
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // URL do WhatsApp (com código do país +55 para Brasil)
+    const whatsappUrl = isMobile
+      ? `https://wa.me/55${phoneNumber}?text=${mensagemCodificada}`
+      : `https://web.whatsapp.com/send?phone=55${phoneNumber}&text=${mensagemCodificada}`;
+
+    // Abrir WhatsApp em nova aba
+    window.open(whatsappUrl, "_blank");
+    
+    toast.success("Abrindo WhatsApp...");
   };
 
   return (
@@ -372,6 +425,17 @@ export default function ManagerDashboard() {
                             <XCircle className="mr-1 h-3 w-3" />
                             Cancelar
                           </Button>
+                          {appointment.client_phone && appointment.status === "agendado" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSendWhatsAppReminder(appointment)}
+                              className="btn-futuristic bg-green-500/10 hover:bg-green-500/20 border-green-500/30"
+                            >
+                              <MessageCircle className="mr-1 h-3 w-3" />
+                              WhatsApp
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
