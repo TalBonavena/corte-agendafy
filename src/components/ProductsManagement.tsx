@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Package, Edit, Trash2, Plus } from "lucide-react";
+import { Package, Edit, Trash2, Plus, Image as ImageIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
 
@@ -27,6 +27,7 @@ interface Product {
   cost_price: number;
   stock_quantity: number;
   is_active: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +46,9 @@ export default function ProductsManagement() {
     stock_quantity: "",
     is_active: true,
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -77,6 +81,7 @@ export default function ProductsManagement() {
         stock_quantity: product.stock_quantity.toString(),
         is_active: product.is_active,
       });
+      setImagePreview(product.image_url);
     } else {
       setEditingProduct(null);
       setFormData({
@@ -87,8 +92,57 @@ export default function ProductsManagement() {
         stock_quantity: "0",
         is_active: true,
       });
+      setImagePreview(null);
     }
+    setSelectedImage(null);
     setIsDialogOpen(true);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Imagem deve ter no máximo 5MB");
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        toast.error("Arquivo deve ser uma imagem");
+        return;
+      }
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadImage = async (productId: string): Promise<string | null> => {
+    if (!selectedImage) return null;
+
+    try {
+      setUploading(true);
+      const fileExt = selectedImage.name.split(".").pop();
+      const fileName = `${productId}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, selectedImage, {
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error: any) {
+      console.error("Erro ao fazer upload da imagem:", error);
+      toast.error("Erro ao fazer upload da imagem");
+      return null;
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,6 +158,12 @@ export default function ProductsManagement() {
       });
 
       if (editingProduct) {
+        let imageUrl = editingProduct.image_url;
+        
+        if (selectedImage) {
+          imageUrl = await uploadImage(editingProduct.id);
+        }
+
         const { error } = await supabase
           .from("products")
           .update({
@@ -113,13 +173,14 @@ export default function ProductsManagement() {
             cost_price: validatedData.cost_price,
             stock_quantity: validatedData.stock_quantity,
             is_active: formData.is_active,
+            image_url: imageUrl,
           })
           .eq("id", editingProduct.id);
 
         if (error) throw error;
         toast.success("Produto atualizado com sucesso!");
       } else {
-        const { error } = await supabase
+        const { data: newProduct, error: insertError } = await supabase
           .from("products")
           .insert({
             name: validatedData.name,
@@ -128,9 +189,22 @@ export default function ProductsManagement() {
             cost_price: validatedData.cost_price,
             stock_quantity: validatedData.stock_quantity,
             is_active: formData.is_active,
-          });
+          })
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+
+        if (selectedImage && newProduct) {
+          const imageUrl = await uploadImage(newProduct.id);
+          if (imageUrl) {
+            await supabase
+              .from("products")
+              .update({ image_url: imageUrl })
+              .eq("id", newProduct.id);
+          }
+        }
+
         toast.success("Produto cadastrado com sucesso!");
       }
 
@@ -202,6 +276,16 @@ export default function ProductsManagement() {
                   : "border-muted bg-muted/30 opacity-60"
               }`}
             >
+              {product.image_url && (
+                <div className="mb-3">
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+              
               <div className="flex justify-between items-start mb-2">
                 <h4 className="font-semibold">{product.name}</h4>
                 <div className="flex gap-2">
@@ -289,6 +373,25 @@ export default function ProductsManagement() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="image">Foto do Produto</Label>
+              <Input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="sale_price">Preço de Venda *</Label>
@@ -339,8 +442,8 @@ export default function ProductsManagement() {
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="btn-futuristic">
-                {editingProduct ? "Atualizar" : "Cadastrar"}
+              <Button type="submit" className="btn-futuristic" disabled={uploading}>
+                {uploading ? "Enviando..." : editingProduct ? "Atualizar" : "Cadastrar"}
               </Button>
             </DialogFooter>
           </form>

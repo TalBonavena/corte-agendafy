@@ -24,6 +24,7 @@ interface Product {
   cost_price: number;
   stock_quantity: number;
   is_active: boolean;
+  image_url: string | null;
 }
 
 export default function ProductSale() {
@@ -156,7 +157,7 @@ export default function ProductSale() {
               <SelectTrigger id="product">
                 <SelectValue placeholder="Selecione um produto" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border-border">
                 {products.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
                     {product.name} - R$ {product.sale_price.toFixed(2)} (Est: {product.stock_quantity})
@@ -164,6 +165,15 @@ export default function ProductSale() {
                 ))}
               </SelectContent>
             </Select>
+            {selectedProduct?.image_url && (
+              <div className="mt-2">
+                <img
+                  src={selectedProduct.image_url}
+                  alt={selectedProduct.name}
+                  className="w-full h-32 object-cover rounded-md"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
