@@ -27,11 +27,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 flex flex-col items-center">
           <img 
             src={logo} 
             alt="Logo Barbearia Master" 
-            className="w-40 h-40 object-contain mb-6 animate-scale-in hover-scale drop-shadow-[0_0_25px_rgba(255,255,255,0.8)] border-4 border-white rounded-2xl p-4 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
+            className="w-40 h-40 object-contain mb-6 rotate-slow drop-shadow-[0_0_25px_rgba(255,255,255,0.8)] border-4 border-white rounded-2xl p-4 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
           />
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Barbearia Master
