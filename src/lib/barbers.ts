@@ -1,4 +1,5 @@
 import lucasPhoto from "@/assets/barber-lucas.jpeg";
+import luisFelipePhoto from "@/assets/barber-luis-felipe.jpeg";
 
 export interface BarberInfo {
   name: string;
@@ -14,6 +15,7 @@ export const BARBERS_INFO: BarberInfo[] = [
   },
   {
     name: "Luis Felipe",
+    photo: luisFelipePhoto,
     specialty: "Expert em pigmentação e mechas",
   },
 ];
