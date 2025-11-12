@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Scissors, Calendar, Clock, Users } from "lucide-react";
+import { Calendar, Clock, Users } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import logo from "@/assets/logo.jpeg";
 
 const Index = () => {
   const { user, userRole, loading } = useAuth();
@@ -28,7 +29,7 @@ const Index = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary mb-6">
-            <Scissors className="w-10 h-10 text-primary-foreground" />
+            <img src={logo} alt="Logo Barbearia Master" className="w-12 h-12 object-contain" />
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Barbearia Master
