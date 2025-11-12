@@ -45,10 +45,8 @@ export default function ProductsManagement() {
     cost_price: "",
     stock_quantity: "",
     is_active: true,
+    image_url: "",
   });
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -80,8 +78,8 @@ export default function ProductsManagement() {
         cost_price: product.cost_price.toString(),
         stock_quantity: product.stock_quantity.toString(),
         is_active: product.is_active,
+        image_url: product.image_url || "",
       });
-      setImagePreview(product.image_url);
     } else {
       setEditingProduct(null);
       setFormData({
@@ -91,58 +89,10 @@ export default function ProductsManagement() {
         cost_price: "",
         stock_quantity: "0",
         is_active: true,
+        image_url: "",
       });
-      setImagePreview(null);
     }
-    setSelectedImage(null);
     setIsDialogOpen(true);
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Imagem deve ter no máximo 5MB");
-        return;
-      }
-      if (!file.type.startsWith("image/")) {
-        toast.error("Arquivo deve ser uma imagem");
-        return;
-      }
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const uploadImage = async (productId: string): Promise<string | null> => {
-    if (!selectedImage) return null;
-
-    try {
-      setUploading(true);
-      const fileExt = selectedImage.name.split(".").pop();
-      const fileName = `${productId}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("product-images")
-        .upload(filePath, selectedImage, {
-          upsert: true,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error: any) {
-      console.error("Erro ao fazer upload da imagem:", error);
-      toast.error("Erro ao fazer upload da imagem");
-      return null;
-    } finally {
-      setUploading(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -158,12 +108,6 @@ export default function ProductsManagement() {
       });
 
       if (editingProduct) {
-        let imageUrl = editingProduct.image_url;
-        
-        if (selectedImage) {
-          imageUrl = await uploadImage(editingProduct.id);
-        }
-
         const { error } = await supabase
           .from("products")
           .update({
@@ -173,14 +117,14 @@ export default function ProductsManagement() {
             cost_price: validatedData.cost_price,
             stock_quantity: validatedData.stock_quantity,
             is_active: formData.is_active,
-            image_url: imageUrl,
+            image_url: formData.image_url || null,
           })
           .eq("id", editingProduct.id);
 
         if (error) throw error;
         toast.success("Produto atualizado com sucesso!");
       } else {
-        const { data: newProduct, error: insertError } = await supabase
+        const { error } = await supabase
           .from("products")
           .insert({
             name: validatedData.name,
@@ -189,22 +133,10 @@ export default function ProductsManagement() {
             cost_price: validatedData.cost_price,
             stock_quantity: validatedData.stock_quantity,
             is_active: formData.is_active,
-          })
-          .select()
-          .single();
+            image_url: formData.image_url || null,
+          });
 
-        if (insertError) throw insertError;
-
-        if (selectedImage && newProduct) {
-          const imageUrl = await uploadImage(newProduct.id);
-          if (imageUrl) {
-            await supabase
-              .from("products")
-              .update({ image_url: imageUrl })
-              .eq("id", newProduct.id);
-          }
-        }
-
+        if (error) throw error;
         toast.success("Produto cadastrado com sucesso!");
       }
 
@@ -374,19 +306,23 @@ export default function ProductsManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image">Foto do Produto</Label>
+              <Label htmlFor="image_url">Link da Foto (URL)</Label>
               <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
+                id="image_url"
+                type="url"
+                placeholder="https://exemplo.com/imagem.jpg"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
               />
-              {imagePreview && (
+              {formData.image_url && (
                 <div className="mt-2">
                   <img
-                    src={imagePreview}
+                    src={formData.image_url}
                     alt="Preview"
                     className="w-full h-32 object-cover rounded-md"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 </div>
               )}
@@ -442,8 +378,8 @@ export default function ProductsManagement() {
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="btn-futuristic" disabled={uploading}>
-                {uploading ? "Enviando..." : editingProduct ? "Atualizar" : "Cadastrar"}
+              <Button type="submit" className="btn-futuristic">
+                {editingProduct ? "Atualizar" : "Cadastrar"}
               </Button>
             </DialogFooter>
           </form>
