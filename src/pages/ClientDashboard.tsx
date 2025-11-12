@@ -312,7 +312,7 @@ export default function ClientDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="mb-8 max-w-md">
           <Card className="glass-panel">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -333,24 +333,6 @@ export default function ClientDashboard() {
                   </div>
                 </>
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="glass-panel lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Estatísticas</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 rounded-lg bg-card/50">
-                <p className="text-2xl font-bold">{appointments.length}</p>
-                <p className="text-sm text-muted-foreground">Total de Agendamentos</p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-card/50">
-                <p className="text-2xl font-bold">
-                  {appointments.filter((a) => a.status === "agendado").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Próximos Agendamentos</p>
-              </div>
             </CardContent>
           </Card>
         </div>
