@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, User, Mail, Calendar, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, Search, User, Mail, Calendar, Clock, TrendingUp, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,6 +12,16 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Client {
   id: string;
@@ -46,6 +56,8 @@ export default function ClientsManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<ClientWithStats | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<ClientWithStats | null>(null);
 
   useEffect(() => {
     fetchClients();
@@ -158,6 +170,40 @@ export default function ClientsManagement() {
     }
   };
 
+  const handleDeleteClick = (client: ClientWithStats) => {
+    setClientToDelete(client);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!clientToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", clientToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Cliente excluído com sucesso");
+      
+      // Limpar seleção se o cliente deletado estava selecionado
+      if (selectedClient?.id === clientToDelete.id) {
+        setSelectedClient(null);
+      }
+      
+      // Atualizar lista de clientes
+      fetchClients();
+    } catch (error: any) {
+      toast.error("Erro ao excluir cliente");
+      console.error(error);
+    } finally {
+      setDeleteDialogOpen(false);
+      setClientToDelete(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <header className="border-b border-border glass-panel sticky top-0 z-10">
@@ -257,7 +303,17 @@ export default function ClientsManagement() {
                 {/* Informações do Cliente */}
                 <Card className="glass-panel">
                   <CardHeader>
-                    <CardTitle>Informações do Cliente</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Informações do Cliente</CardTitle>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteClick(selectedClient)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir Cliente
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -400,6 +456,26 @@ export default function ClientsManagement() {
           </div>
         </div>
       </main>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O cliente <strong>{clientToDelete?.name}</strong> e todos os seus agendamentos serão permanentemente excluídos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
