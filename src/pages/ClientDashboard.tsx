@@ -16,10 +16,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { SERVICES, formatServiceDisplay } from "@/lib/services";
 import { BARBERS, TIME_SLOTS, getBarberInfo } from "@/lib/barbers";
 import { z } from "zod";
 import logo from "@/assets/logo.jpeg";
+import ServiceSelector from "@/components/ServiceSelector";
 
 // Validation schema for appointment creation
 const appointmentSchema = z.object({
@@ -455,23 +455,11 @@ export default function ClientDashboard() {
             <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <form onSubmit={handleCreateAppointment} className="space-y-3 sm:space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="service" className="text-xs sm:text-sm">Serviço</Label>
-                  <Select
+                  <Label className="text-xs sm:text-sm">Serviço</Label>
+                  <ServiceSelector
                     value={newAppointment.service}
-                    onValueChange={(value) => setNewAppointment({ ...newAppointment, service: value })}
-                    required
-                  >
-                    <SelectTrigger id="service" className="h-9 sm:h-10 text-sm">
-                      <SelectValue placeholder="Selecione um serviço" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SERVICES.map((service) => (
-                        <SelectItem key={service.name} value={service.name}>
-                          {formatServiceDisplay(service)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(value) => setNewAppointment({ ...newAppointment, service: value })}
+                  />
                 </div>
 
                 <div className="space-y-2">
