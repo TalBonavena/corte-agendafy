@@ -391,7 +391,7 @@ export default function ClientDashboard() {
               alt="Logo Barbearia Master" 
               className="w-10 h-10 sm:w-12 sm:h-12 object-contain pulse-glow border-2 border-white rounded-xl p-1.5 sm:p-2 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
             />
-            <h1 className="text-lg sm:text-2xl font-bold">Meu Painel</h1>
+            <h1 className="text-lg sm:text-2xl font-bold">Innovation Barbershop</h1>
           </div>
           <Button variant="outline" onClick={signOut} className="btn-futuristic text-xs sm:text-sm px-2 sm:px-4">
             <LogOut className="h-4 w-4 sm:mr-2" />
