@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   Calendar, 
   Users, 
@@ -21,7 +22,8 @@ import {
   Trash2,
   Ban,
   MessageCircle,
-  Settings
+  Settings,
+  Menu
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +65,8 @@ export default function ManagerDashboard() {
   });
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("appointments");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     service: "",
     barber: "",
@@ -70,6 +74,14 @@ export default function ManagerDashboard() {
     scheduled_time: "",
     notes: "",
   });
+
+  const menuItems = [
+    { value: "appointments", label: "Agendamentos", icon: Calendar },
+    { value: "clients", label: "Clientes", icon: Users },
+    { value: "products", label: "Produtos", icon: Package },
+    { value: "billing", label: "Faturamento", icon: DollarSign },
+    { value: "settings", label: "Configurações", icon: Settings },
+  ];
 
   useEffect(() => {
     fetchAppointments();
@@ -315,9 +327,53 @@ Se precisar reagendar, entre em contato conosco.`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="w-64 glass-panel">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="flex items-center gap-3">
+              <img 
+                src={logo} 
+                alt="Logo" 
+                className="w-10 h-10 object-contain rounded-lg border-2 border-white p-1" 
+              />
+              <span>Painel Admin</span>
+            </SheetTitle>
+          </SheetHeader>
+          <nav className="space-y-2">
+            {menuItems.map((item) => (
+              <button
+                key={item.value}
+                onClick={() => {
+                  setActiveTab(item.value);
+                  setSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                  activeTab === item.value 
+                    ? "bg-primary text-primary-foreground" 
+                    : "hover:bg-accent"
+                }`}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </SheetContent>
+      </Sheet>
+
       <header className="border-b border-border glass-panel sticky top-0 z-10">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Mobile menu button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden" 
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
             <img 
               src={logo} 
               alt="Logo Barbearia Master" 
@@ -365,8 +421,8 @@ Se precisar reagendar, entre em contato conosco.`;
           </Card>
         </div>
 
-        <Tabs defaultValue="appointments" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-5 glass-panel h-auto p-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="hidden md:grid w-full grid-cols-5 glass-panel h-auto p-1">
             <TabsTrigger value="appointments" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Agendamentos</span>
