@@ -383,38 +383,38 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <header className="border-b border-border glass-panel sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 sm:gap-4">
             <img 
               src={logo} 
               alt="Logo Barbearia Master" 
-              className="w-12 h-12 object-contain pulse-glow border-2 border-white rounded-xl p-2 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain pulse-glow border-2 border-white rounded-xl p-1.5 sm:p-2 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
             />
-            <h1 className="text-2xl font-bold">Meu Painel</h1>
+            <h1 className="text-lg sm:text-2xl font-bold">Meu Painel</h1>
           </div>
-          <Button variant="outline" onClick={signOut} className="btn-futuristic">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
+          <Button variant="outline" onClick={signOut} className="btn-futuristic text-xs sm:text-sm px-2 sm:px-4">
+            <LogOut className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sair</span>
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8 max-w-md">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
+        <div className="mb-4 sm:mb-8">
           <Card className="glass-panel">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+            <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
                 Meu Perfil
               </CardTitle>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setIsEditProfileOpen(true)}
-                className="btn-futuristic"
+                className="btn-futuristic text-xs sm:text-sm"
               >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
+                <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Editar</span>
               </Button>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -446,22 +446,22 @@ export default function ClientDashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle>Novo Agendamento</CardTitle>
-              <CardDescription>Agende seu próximo atendimento</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Novo Agendamento</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Agende seu próximo atendimento</CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreateAppointment} className="space-y-4">
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+              <form onSubmit={handleCreateAppointment} className="space-y-3 sm:space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="service">Serviço</Label>
+                  <Label htmlFor="service" className="text-xs sm:text-sm">Serviço</Label>
                   <Select
                     value={newAppointment.service}
                     onValueChange={(value) => setNewAppointment({ ...newAppointment, service: value })}
                     required
                   >
-                    <SelectTrigger id="service">
+                    <SelectTrigger id="service" className="h-9 sm:h-10 text-sm">
                       <SelectValue placeholder="Selecione um serviço" />
                     </SelectTrigger>
                     <SelectContent>
@@ -475,7 +475,7 @@ export default function ClientDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="barber">Barbeiro</Label>
+                  <Label htmlFor="barber" className="text-xs sm:text-sm">Barbeiro</Label>
                   <Select
                     value={newAppointment.barber}
                     onValueChange={(value) => {
@@ -484,7 +484,7 @@ export default function ClientDashboard() {
                     }}
                     required
                   >
-                    <SelectTrigger id="barber">
+                    <SelectTrigger id="barber" className="h-9 sm:h-10 text-sm">
                       <SelectValue placeholder="Selecione um barbeiro" />
                     </SelectTrigger>
                     <SelectContent>
@@ -499,19 +499,19 @@ export default function ClientDashboard() {
                   {newAppointment.barber && (() => {
                     const barberInfo = getBarberInfo(newAppointment.barber);
                     return barberInfo ? (
-                      <div className="mt-3 p-4 rounded-lg bg-card/50 border border-border">
-                        <div className="flex items-center gap-4">
+                      <div className="mt-2 sm:mt-3 p-3 sm:p-4 rounded-lg bg-card/50 border border-border">
+                        <div className="flex items-center gap-3 sm:gap-4">
                           {barberInfo.photo && (
                             <img
                               src={barberInfo.photo}
                               alt={barberInfo.name}
-                              className="w-20 h-20 rounded-full object-cover border-2 border-primary"
+                              className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary"
                             />
                           )}
                           <div>
-                            <h4 className="font-semibold text-lg">{barberInfo.name}</h4>
+                            <h4 className="font-semibold text-sm sm:text-lg">{barberInfo.name}</h4>
                             {barberInfo.specialty && (
-                              <p className="text-sm text-muted-foreground">{barberInfo.specialty}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground">{barberInfo.specialty}</p>
                             )}
                           </div>
                         </div>
@@ -521,19 +521,19 @@ export default function ClientDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Data</Label>
+                  <Label className="text-xs sm:text-sm">Data</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal h-9 sm:h-10 text-sm",
                           !newAppointment.date && "text-muted-foreground"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {newAppointment.date ? (
-                          format(newAppointment.date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                          format(newAppointment.date, "dd/MM/yyyy", { locale: ptBR })
                         ) : (
                           "Selecione a data"
                         )}
@@ -555,14 +555,14 @@ export default function ClientDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="time">Horário</Label>
+                  <Label htmlFor="time" className="text-xs sm:text-sm">Horário</Label>
                   {!newAppointment.barber || !newAppointment.date ? (
-                    <p className="text-sm text-muted-foreground">
-                      Selecione um barbeiro e uma data primeiro
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Selecione barbeiro e data primeiro
                     </p>
                   ) : availableSlots.length === 0 ? (
-                    <p className="text-sm text-red-500">
-                      Sem horários disponíveis para esta data
+                    <p className="text-xs sm:text-sm text-red-500">
+                      Sem horários disponíveis
                     </p>
                   ) : (
                     <Select
@@ -570,7 +570,7 @@ export default function ClientDashboard() {
                       onValueChange={(value) => setNewAppointment({ ...newAppointment, time: value })}
                       required
                     >
-                      <SelectTrigger id="time">
+                      <SelectTrigger id="time" className="h-9 sm:h-10 text-sm">
                         <SelectValue placeholder="Selecione um horário" />
                       </SelectTrigger>
                       <SelectContent>
@@ -585,16 +585,17 @@ export default function ClientDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Observações (opcional)</Label>
+                  <Label htmlFor="notes" className="text-xs sm:text-sm">Observações (opcional)</Label>
                   <Textarea
                     id="notes"
                     placeholder="Alguma observação especial?"
                     value={newAppointment.notes}
                     onChange={(e) => setNewAppointment({ ...newAppointment, notes: e.target.value })}
+                    className="text-sm min-h-[60px] sm:min-h-[80px]"
                   />
                 </div>
 
-                <Button type="submit" className="w-full btn-futuristic">
+                <Button type="submit" className="w-full btn-futuristic h-9 sm:h-10 text-sm">
                   Confirmar Agendamento
                 </Button>
               </form>
@@ -602,53 +603,53 @@ export default function ClientDashboard() {
           </Card>
 
           <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle>Meus Agendamentos</CardTitle>
-              <CardDescription>Histórico de atendimentos</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Meus Agendamentos</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Histórico de atendimentos</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               {loading ? (
                 <p className="text-center text-muted-foreground">Carregando...</p>
               ) : appointments.length === 0 ? (
                 <p className="text-center text-muted-foreground">Nenhum agendamento encontrado</p>
               ) : (
-                <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                <div className="space-y-3 max-h-[400px] sm:max-h-[500px] overflow-y-auto">
                   {appointments.map((appointment) => (
                     <div
                       key={appointment.id}
-                      className="p-4 rounded-lg border border-border bg-card/50 hover:bg-card transition-colors"
+                      className="p-3 sm:p-4 rounded-lg border border-border bg-card/50 hover:bg-card transition-colors"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold">{appointment.service}</h3>
-                        <span className={cn("text-sm font-medium", getStatusColor(appointment.status))}>
+                      <div className="flex justify-between items-start mb-2 gap-2">
+                        <h3 className="font-semibold text-sm sm:text-base">{appointment.service}</h3>
+                        <span className={cn("text-xs sm:text-sm font-medium flex-shrink-0", getStatusColor(appointment.status))}>
                           {getStatusText(appointment.status)}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-2">
                         <strong>Barbeiro:</strong> {appointment.barber}
                       </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                      <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
                         <span className="flex items-center gap-1">
                           <CalendarIcon className="h-3 w-3" />
                           {format(new Date(appointment.scheduled_date), "dd/MM/yyyy")}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {appointment.scheduled_time}
+                          {appointment.scheduled_time.substring(0, 5)}
                         </span>
                       </div>
                       {appointment.notes && (
-                        <p className="text-sm text-muted-foreground mb-3">{appointment.notes}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">{appointment.notes}</p>
                       )}
                       {appointment.status === "agendado" && (
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => setCancelConfirmId(appointment.id)}
-                          className="w-full"
+                          className="w-full h-8 sm:h-9 text-xs sm:text-sm"
                         >
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Cancelar Agendamento
+                          <XCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          Cancelar
                         </Button>
                       )}
                     </div>
