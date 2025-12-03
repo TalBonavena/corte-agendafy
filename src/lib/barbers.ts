@@ -9,7 +9,7 @@ export interface BarberInfo {
 
 export const BARBERS_INFO: BarberInfo[] = [
   {
-    name: "Lucas",
+    name: "Lucas Batista",
     photo: lucasPhoto,
     specialty: "Especialista em cortes modernos e barba",
   },
