@@ -16,7 +16,7 @@ export const BARBERS_INFO: BarberInfo[] = [
   {
     name: "Luis Felipe",
     photo: luisFelipePhoto,
-    specialty: "Expert em pigmentação e mechas",
+    specialty: "Especialista em cortes modernos e barba",
   },
 ];
 
