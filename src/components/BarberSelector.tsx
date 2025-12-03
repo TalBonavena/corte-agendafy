@@ -105,8 +105,7 @@ function BarberCard({ barber, isSelected, onSelect, delay = 0 }: BarberCardProps
         "w-full p-4 rounded-xl border text-left transition-all duration-200",
         "hover:border-primary/50 hover:bg-primary/5 hover:shadow-lg hover:scale-[1.02]",
         "active:scale-[0.98]",
-        "animate-fade-in opacity-0",
-        "[animation-fill-mode:forwards]",
+        "animate-fade-in",
         isSelected 
           ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md" 
           : "border-border bg-card/50"

@@ -124,8 +124,7 @@ function ServiceCard({ service, isSelected, onSelect, delay = 0 }: ServiceCardPr
         "w-full p-3 rounded-lg border text-left transition-all duration-200",
         "hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:scale-[1.02]",
         "active:scale-[0.98]",
-        "animate-fade-in opacity-0",
-        "[animation-fill-mode:forwards]",
+        "animate-fade-in",
         isSelected 
           ? "border-primary bg-primary/10 ring-1 ring-primary/20 shadow-sm" 
           : "border-border bg-card/50"
