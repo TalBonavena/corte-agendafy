@@ -155,13 +155,15 @@ export default function ManagerDashboard() {
     try {
       const { count: total } = await supabase
         .from("appointments")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .neq("status", "cancelado");
 
       const today = new Date().toISOString().split("T")[0];
       const { count: todayCount } = await supabase
         .from("appointments")
         .select("*", { count: "exact", head: true })
-        .eq("scheduled_date", today);
+        .eq("scheduled_date", today)
+        .neq("status", "cancelado");
 
       const { count: pendingCount } = await supabase
         .from("appointments")
