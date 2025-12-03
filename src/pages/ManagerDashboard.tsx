@@ -316,76 +316,80 @@ Se precisar reagendar, entre em contato conosco.`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <header className="border-b border-border glass-panel sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 sm:gap-4">
             <img 
               src={logo} 
               alt="Logo Barbearia Master" 
-              className="w-12 h-12 object-contain pulse-glow border-2 border-white rounded-xl p-2 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain pulse-glow border-2 border-white rounded-xl p-1.5 sm:p-2 bg-gradient-to-br from-background/10 to-background/5 backdrop-blur-sm" 
             />
-            <h1 className="text-2xl font-bold">Painel do Gerente</h1>
+            <h1 className="text-lg sm:text-2xl font-bold">Painel Admin</h1>
           </div>
-          <Button variant="outline" onClick={signOut} className="btn-futuristic">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
+          <Button variant="outline" onClick={signOut} className="btn-futuristic text-xs sm:text-sm px-2 sm:px-4">
+            <LogOut className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sair</span>
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-8">
           <Card className="glass-panel">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total de Agendamentos</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalAppointments}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-xl sm:text-2xl font-bold">{stats.totalAppointments}</div>
             </CardContent>
           </Card>
 
           <Card className="glass-panel">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Agendamentos Hoje</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Hoje</CardTitle>
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.todayAppointments}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-xl sm:text-2xl font-bold">{stats.todayAppointments}</div>
             </CardContent>
           </Card>
 
           <Card className="glass-panel">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Pendentes</CardTitle>
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingAppointments}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-xl sm:text-2xl font-bold">{stats.pendingAppointments}</div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="appointments" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 glass-panel">
-            <TabsTrigger value="appointments">
-              <Calendar className="mr-2 h-4 w-4" />
-              Agendamentos
+        <Tabs defaultValue="appointments" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-5 glass-panel h-auto p-1">
+            <TabsTrigger value="appointments" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Agendamentos</span>
+              <span className="sm:hidden">Agenda</span>
             </TabsTrigger>
-            <TabsTrigger value="clients">
-              <Users className="mr-2 h-4 w-4" />
-              Clientes
+            <TabsTrigger value="clients" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
+              <Users className="h-4 w-4" />
+              <span>Clientes</span>
             </TabsTrigger>
-            <TabsTrigger value="products">
-              <Package className="mr-2 h-4 w-4" />
-              Produtos
+            <TabsTrigger value="products" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
+              <Package className="h-4 w-4" />
+              <span className="hidden sm:inline">Produtos</span>
+              <span className="sm:hidden">Prod.</span>
             </TabsTrigger>
-            <TabsTrigger value="billing">
-              <DollarSign className="mr-2 h-4 w-4" />
-              Faturamento
+            <TabsTrigger value="billing" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
+              <DollarSign className="h-4 w-4" />
+              <span className="hidden sm:inline">Faturamento</span>
+              <span className="sm:hidden">Fatur.</span>
             </TabsTrigger>
-            <TabsTrigger value="settings">
-              <Settings className="mr-2 h-4 w-4" />
-              Configurações
+            <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Configurações</span>
+              <span className="sm:hidden">Config</span>
             </TabsTrigger>
           </TabsList>
 
@@ -401,94 +405,96 @@ Se precisar reagendar, entre em contato conosco.`;
                 ) : appointments.length === 0 ? (
                   <p className="text-center text-muted-foreground">Nenhum agendamento encontrado</p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {appointments.map((appointment) => (
                       <div
                         key={appointment.id}
-                        className="p-4 rounded-lg border border-border bg-card/50 hover:bg-card transition-colors"
+                        className="p-3 sm:p-4 rounded-lg border border-border bg-card/50 hover:bg-card transition-colors"
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-semibold">{appointment.client_name}</h3>
-                            <p className="text-sm text-muted-foreground">{appointment.client_email}</p>
+                          <div className="min-w-0 flex-1 mr-2">
+                            <h3 className="font-semibold text-sm sm:text-base truncate">{appointment.client_name}</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground truncate">{appointment.client_email}</p>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium">
-                              {format(new Date(appointment.scheduled_date), "dd 'de' MMMM", { locale: ptBR })}
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-xs sm:text-sm font-medium">
+                              {format(new Date(appointment.scheduled_date), "dd/MM", { locale: ptBR })}
                             </p>
-                            <p className="text-sm text-muted-foreground">{appointment.scheduled_time}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{appointment.scheduled_time.substring(0, 5)}</p>
                           </div>
                         </div>
                         
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm"><strong>Serviço:</strong> {appointment.service}</p>
-                            <p className="text-sm font-semibold text-primary">
+                        <div className="mb-2 sm:mb-3 space-y-1">
+                          <div className="flex items-center justify-between flex-wrap gap-1">
+                            <p className="text-xs sm:text-sm"><strong>Serviço:</strong> {appointment.service}</p>
+                            <p className="text-xs sm:text-sm font-semibold text-primary">
                               {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(getServicePrice(appointment.service))}
                             </p>
                           </div>
-                          <p className="text-sm"><strong>Barbeiro:</strong> {appointment.barber}</p>
+                          <p className="text-xs sm:text-sm"><strong>Barbeiro:</strong> {appointment.barber}</p>
                           {appointment.notes && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              <strong>Observações:</strong> {appointment.notes}
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              <strong>Obs:</strong> {appointment.notes}
                             </p>
                           )}
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
                           <Button
                             size="sm"
                             variant={appointment.status === "agendado" ? "default" : "outline"}
                             onClick={() => updateAppointmentStatus(appointment.id, "agendado")}
-                            className="btn-futuristic"
+                            className="btn-futuristic h-7 sm:h-8 text-xs px-2 sm:px-3"
                           >
-                            <Clock className="mr-1 h-3 w-3" />
-                            Agendado
+                            <Clock className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Agendado</span>
                           </Button>
                           <Button
                             size="sm"
                             variant={appointment.status === "concluido" ? "default" : "outline"}
                             onClick={() => updateAppointmentStatus(appointment.id, "concluido")}
-                            className="btn-futuristic"
+                            className="btn-futuristic h-7 sm:h-8 text-xs px-2 sm:px-3"
                           >
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Concluído
+                            <CheckCircle className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Concluído</span>
                           </Button>
                           <Button
                             size="sm"
                             variant={appointment.status === "cancelado" ? "destructive" : "outline"}
                             onClick={() => updateAppointmentStatus(appointment.id, "cancelado")}
+                            className="h-7 sm:h-8 text-xs px-2 sm:px-3"
                           >
-                            <XCircle className="mr-1 h-3 w-3" />
-                            Cancelar
+                            <XCircle className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Cancelar</span>
                           </Button>
                           {appointment.client_phone && appointment.status === "agendado" && (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleSendWhatsAppReminder(appointment)}
-                              className="btn-futuristic bg-green-500/10 hover:bg-green-500/20 border-green-500/30"
+                              className="btn-futuristic bg-green-500/10 hover:bg-green-500/20 border-green-500/30 h-7 sm:h-8 text-xs px-2 sm:px-3"
                             >
-                              <MessageCircle className="mr-1 h-3 w-3" />
-                              WhatsApp
+                              <MessageCircle className="h-3 w-3 sm:mr-1" />
+                              <span className="hidden sm:inline">WhatsApp</span>
                             </Button>
                           )}
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleEditClick(appointment)}
-                            className="btn-futuristic"
+                            className="btn-futuristic h-7 sm:h-8 text-xs px-2 sm:px-3"
                           >
-                            <Edit className="mr-1 h-3 w-3" />
-                            Editar
+                            <Edit className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Editar</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => setDeleteConfirmId(appointment.id)}
+                            className="h-7 sm:h-8 text-xs px-2 sm:px-3"
                           >
-                            <Trash2 className="mr-1 h-3 w-3" />
-                            Excluir
+                            <Trash2 className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Excluir</span>
                           </Button>
                         </div>
                       </div>
