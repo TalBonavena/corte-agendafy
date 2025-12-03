@@ -16,10 +16,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { BARBERS, TIME_SLOTS, getBarberInfo } from "@/lib/barbers";
+import { TIME_SLOTS } from "@/lib/barbers";
 import { z } from "zod";
 import logo from "@/assets/logo.jpeg";
 import ServiceSelector from "@/components/ServiceSelector";
+import BarberSelector from "@/components/BarberSelector";
 
 // Validation schema for appointment creation
 const appointmentSchema = z.object({
@@ -463,49 +464,14 @@ export default function ClientDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="barber" className="text-xs sm:text-sm">Barbeiro</Label>
-                  <Select
+                  <Label className="text-xs sm:text-sm">Barbeiro</Label>
+                  <BarberSelector
                     value={newAppointment.barber}
-                    onValueChange={(value) => {
+                    onChange={(value) => {
                       setNewAppointment({ ...newAppointment, barber: value, time: "" });
                       setAvailableSlots([]);
                     }}
-                    required
-                  >
-                    <SelectTrigger id="barber" className="h-9 sm:h-10 text-sm">
-                      <SelectValue placeholder="Selecione um barbeiro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BARBERS.map((barber) => (
-                        <SelectItem key={barber} value={barber}>
-                          {barber}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {newAppointment.barber && (() => {
-                    const barberInfo = getBarberInfo(newAppointment.barber);
-                    return barberInfo ? (
-                      <div className="mt-2 sm:mt-3 p-3 sm:p-4 rounded-lg bg-card/50 border border-border">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          {barberInfo.photo && (
-                            <img
-                              src={barberInfo.photo}
-                              alt={barberInfo.name}
-                              className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary"
-                            />
-                          )}
-                          <div>
-                            <h4 className="font-semibold text-sm sm:text-lg">{barberInfo.name}</h4>
-                            {barberInfo.specialty && (
-                              <p className="text-xs sm:text-sm text-muted-foreground">{barberInfo.specialty}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
+                  />
                 </div>
 
                 <div className="space-y-2">
