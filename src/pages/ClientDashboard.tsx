@@ -172,6 +172,7 @@ export default function ClientDashboard() {
         .from("appointments")
         .select("*")
         .eq("client_id", user.id)
+        .neq("status", "cancelado")
         .order("scheduled_date", { ascending: true })
         .order("scheduled_time", { ascending: true });
 
