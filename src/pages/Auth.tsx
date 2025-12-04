@@ -16,10 +16,14 @@ const loginSchema = z.object({
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
 });
 
+const brazilianPhoneRegex = /^\(\d{2}\) \d{5}-\d{4}$/;
+
 const signupSchema = z.object({
   name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
   email: z.string().email("E-mail inválido"),
-  phone: z.string().optional(),
+  phone: z.string()
+    .min(1, "Telefone é obrigatório")
+    .regex(brazilianPhoneRegex, "Telefone inválido. Use o formato (99) 99999-9999"),
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -85,7 +89,7 @@ export default function Auth() {
     try {
       signupSchema.parse(signupData);
       setIsLoading(true);
-      await signUp(signupData.email, signupData.password, signupData.name, signupData.phone || undefined);
+      await signUp(signupData.email, signupData.password, signupData.name, signupData.phone);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -196,7 +200,7 @@ export default function Auth() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Telefone (opcional)</Label>
+                    <Label htmlFor="signup-phone">Telefone</Label>
                     <Input
                       id="signup-phone"
                       type="tel"
@@ -204,6 +208,7 @@ export default function Auth() {
                       value={signupData.phone}
                       onChange={(e) => setSignupData({ ...signupData, phone: formatPhone(e.target.value) })}
                       maxLength={15}
+                      required
                     />
                     {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                   </div>
