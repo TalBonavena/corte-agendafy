@@ -179,10 +179,10 @@ export default function ClientsManagement() {
     if (!clientToDelete) return;
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", clientToDelete.id);
+      // Call edge function to delete user from auth.users
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: clientToDelete.id }
+      });
 
       if (error) throw error;
 
@@ -196,8 +196,8 @@ export default function ClientsManagement() {
       // Atualizar lista de clientes
       fetchClients();
     } catch (error: any) {
-      toast.error("Erro ao excluir cliente");
-      console.error(error);
+      console.error('Error deleting client:', error);
+      toast.error("Erro ao excluir cliente: " + (error.message || "Erro desconhecido"));
     } finally {
       setDeleteDialogOpen(false);
       setClientToDelete(null);
