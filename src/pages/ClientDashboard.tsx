@@ -408,7 +408,7 @@ export default function ClientDashboard() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "agendado":
-        return "Aguardando confirmação";
+        return "Agendado";
       case "concluido":
         return "Concluído";
       case "cancelado":
