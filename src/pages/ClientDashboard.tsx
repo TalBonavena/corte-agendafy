@@ -6,11 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar as CalendarIcon, LogOut, Clock, User, Mail, XCircle, Phone, Edit } from "lucide-react";
+import { Calendar as CalendarIcon, LogOut, Clock, User, Mail, XCircle, Phone, Edit, Crown, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, addDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -47,6 +47,15 @@ interface Profile {
   phone: string | null;
 }
 
+interface Subscription {
+  id: string;
+  plan_name: string;
+  price: number;
+  cuts_per_week: number;
+  is_active: boolean;
+  subscribed_at: string;
+}
+
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter no mínimo 2 caracteres").max(100, "Nome muito longo"),
   phone: z.string()
@@ -76,6 +85,9 @@ export default function ClientDashboard() {
     name: "",
     phone: "",
   });
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [isSubscribeDialogOpen, setIsSubscribeDialogOpen] = useState(false);
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 0 }));
   
   // Ref para armazenar valores atuais para os callbacks realtime
   const appointmentRef = useRef(newAppointment);
@@ -83,6 +95,7 @@ export default function ClientDashboard() {
   useEffect(() => {
     fetchProfile();
     fetchAppointments();
+    fetchSubscription();
   }, [user]);
 
   useEffect(() => {
@@ -184,6 +197,69 @@ export default function ClientDashboard() {
       setLoading(false);
     }
   };
+
+  const fetchSubscription = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("client_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+      setSubscription(data);
+    } catch (error: any) {
+      console.error("Erro ao carregar assinatura:", error);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .insert({
+          client_id: user.id,
+          plan_name: "Plano Cabelo Semanal",
+          price: 80.00,
+          cuts_per_week: 1,
+        });
+
+      if (error) throw error;
+
+      toast.success("Plano ativado com sucesso! Seu calendário agora mostra visualização semanal.");
+      setIsSubscribeDialogOpen(false);
+      fetchSubscription();
+    } catch (error: any) {
+      toast.error("Erro ao ativar plano");
+      console.error(error);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!user || !subscription) return;
+    
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ is_active: false })
+        .eq("id", subscription.id);
+
+      if (error) throw error;
+
+      toast.success("Plano cancelado com sucesso.");
+      setSubscription(null);
+    } catch (error: any) {
+      toast.error("Erro ao cancelar plano");
+    }
+  };
+
+  // Gera os dias da semana atual para o calendário semanal
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
   const fetchAvailableSlots = async () => {
     if (!newAppointment.barber || !newAppointment.date) return;
@@ -448,6 +524,70 @@ export default function ClientDashboard() {
           </Card>
         </div>
 
+        {/* Plano de Assinatura */}
+        <div className="mb-4 sm:mb-8">
+          <Card className={cn("glass-panel", subscription && "border-primary/50")}>
+            <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+                Plano Cabelo Semanal
+              </CardTitle>
+              {subscription ? (
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-green-500 font-medium">
+                  <Check className="h-4 w-4" />
+                  Ativo
+                </span>
+              ) : (
+                <span className="text-lg sm:text-xl font-bold text-primary">R$ 80,00</span>
+              )}
+            </CardHeader>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+              {subscription ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Você tem direito a <strong>1 corte por semana</strong>. Seu calendário agora mostra visualização semanal.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Assinatura ativa desde: {format(new Date(subscription.subscribed_at), "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleCancelSubscription}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    Cancelar Plano
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      1 corte garantido por semana
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      Calendário semanal exclusivo
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      Economia de até R$ 40,00/mês
+                    </li>
+                  </ul>
+                  <Button 
+                    onClick={() => setIsSubscribeDialogOpen(true)} 
+                    className="w-full btn-futuristic"
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    Aderir ao Plano
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card className="glass-panel">
             <CardHeader className="p-4 sm:p-6">
@@ -477,36 +617,94 @@ export default function ClientDashboard() {
 
                 <div className="space-y-2">
                   <Label className="text-xs sm:text-sm">Data</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal h-9 sm:h-10 text-sm",
-                          !newAppointment.date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newAppointment.date ? (
-                          format(newAppointment.date, "dd/MM/yyyy", { locale: ptBR })
-                        ) : (
-                          "Selecione a data"
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 glass-panel">
-                      <Calendar
-                        mode="single"
-                        selected={newAppointment.date}
-                        onSelect={(date) => {
-                          setNewAppointment({ ...newAppointment, date, time: "" });
-                          setAvailableSlots([]);
-                        }}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  {subscription ? (
+                    // Calendário Semanal para assinantes
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentWeekStart(addDays(currentWeekStart, -7))}
+                        >
+                          ← Semana anterior
+                        </Button>
+                        <span className="text-xs sm:text-sm font-medium">
+                          {format(currentWeekStart, "dd/MM", { locale: ptBR })} - {format(addDays(currentWeekStart, 6), "dd/MM", { locale: ptBR })}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentWeekStart(addDays(currentWeekStart, 7))}
+                        >
+                          Próxima semana →
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {weekDays.map((day) => {
+                          const isToday = isSameDay(day, new Date());
+                          const isPast = day < new Date() && !isToday;
+                          const isSelected = newAppointment.date && isSameDay(day, newAppointment.date);
+                          
+                          return (
+                            <Button
+                              key={day.toISOString()}
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
+                              disabled={isPast}
+                              onClick={() => {
+                                setNewAppointment({ ...newAppointment, date: day, time: "" });
+                                setAvailableSlots([]);
+                              }}
+                              className={cn(
+                                "flex flex-col h-auto py-2 px-1",
+                                isToday && !isSelected && "border-primary",
+                                isPast && "opacity-50"
+                              )}
+                            >
+                              <span className="text-[10px] uppercase">
+                                {format(day, "EEE", { locale: ptBR })}
+                              </span>
+                              <span className="text-sm font-bold">
+                                {format(day, "dd")}
+                              </span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    // Calendário Mensal padrão
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal h-9 sm:h-10 text-sm",
+                            !newAppointment.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newAppointment.date ? (
+                            format(newAppointment.date, "dd/MM/yyyy", { locale: ptBR })
+                          ) : (
+                            "Selecione a data"
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 glass-panel">
+                        <Calendar
+                          mode="single"
+                          selected={newAppointment.date}
+                          onSelect={(date) => {
+                            setNewAppointment({ ...newAppointment, date, time: "" });
+                            setAvailableSlots([]);
+                          }}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -689,6 +887,40 @@ export default function ClientDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Assinatura */}
+      <AlertDialog open={isSubscribeDialogOpen} onOpenChange={setIsSubscribeDialogOpen}>
+        <AlertDialogContent className="glass-panel">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              Aderir ao Plano Cabelo Semanal
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>Você está prestes a aderir ao plano de <strong>R$ 80,00/mês</strong>.</p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  1 corte garantido por semana
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  Calendário semanal exclusivo para agendamentos
+                </li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-2">
+                * O pagamento deve ser feito presencialmente na barbearia.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubscribe} className="btn-futuristic">
+              Confirmar Adesão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

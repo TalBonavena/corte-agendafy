@@ -232,6 +232,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          client_id: string
+          created_at: string
+          cuts_per_week: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          plan_name: string
+          price: number
+          subscribed_at: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          cuts_per_week?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          plan_name?: string
+          price?: number
+          subscribed_at?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          cuts_per_week?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          plan_name?: string
+          price?: number
+          subscribed_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
