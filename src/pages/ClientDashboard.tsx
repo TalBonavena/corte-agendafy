@@ -643,26 +643,30 @@ export default function ClientDashboard() {
                   {subscription ? (
                     // Calendário Semanal para assinantes
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setCurrentWeekStart(addDays(currentWeekStart, -7))}
+                          className="px-2 sm:px-3 text-xs sm:text-sm"
                         >
-                          ← Semana anterior
+                          <span className="hidden sm:inline">← Semana anterior</span>
+                          <span className="sm:hidden">← Ant.</span>
                         </Button>
-                        <span className="text-xs sm:text-sm font-medium">
+                        <span className="text-xs sm:text-sm font-medium text-center flex-1">
                           {format(currentWeekStart, "dd/MM", { locale: ptBR })} - {format(addDays(currentWeekStart, 6), "dd/MM", { locale: ptBR })}
                         </span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setCurrentWeekStart(addDays(currentWeekStart, 7))}
+                          className="px-2 sm:px-3 text-xs sm:text-sm"
                         >
-                          Próxima semana →
+                          <span className="hidden sm:inline">Próxima semana →</span>
+                          <span className="sm:hidden">Próx. →</span>
                         </Button>
                       </div>
-                      <div className="grid grid-cols-7 gap-1">
+                      <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                         {weekDays.map((day) => {
                           const isToday = isSameDay(day, new Date());
                           const isPast = day < new Date() && !isToday;
@@ -679,15 +683,15 @@ export default function ClientDashboard() {
                                 setAvailableSlots([]);
                               }}
                               className={cn(
-                                "flex flex-col h-auto py-2 px-1",
+                                "flex flex-col h-auto py-1.5 sm:py-2 px-0.5 sm:px-1 min-w-0",
                                 isToday && !isSelected && "border-primary",
                                 isPast && "opacity-50"
                               )}
                             >
-                              <span className="text-[10px] uppercase">
+                              <span className="text-[8px] sm:text-[10px] uppercase truncate">
                                 {format(day, "EEE", { locale: ptBR })}
                               </span>
-                              <span className="text-sm font-bold">
+                              <span className="text-xs sm:text-sm font-bold">
                                 {format(day, "dd")}
                               </span>
                             </Button>
