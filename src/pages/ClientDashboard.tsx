@@ -331,8 +331,11 @@ export default function ClientDashboard() {
 
     // Validate appointment data with Zod schema
     try {
+      // Assinantes só podem agendar "Corte"
+      const serviceToUse = subscription ? "Corte" : newAppointment.service;
+      
       const validatedData = appointmentSchema.parse({
-        service: newAppointment.service,
+        service: serviceToUse,
         barber: newAppointment.barber,
         date: newAppointment.date,
         time: newAppointment.time,
@@ -621,10 +624,17 @@ export default function ClientDashboard() {
               <form onSubmit={handleCreateAppointment} className="space-y-3 sm:space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs sm:text-sm">Serviço</Label>
-                  <ServiceSelector
-                    value={newAppointment.service}
-                    onChange={(value) => setNewAppointment({ ...newAppointment, service: value })}
-                  />
+                  {subscription ? (
+                    <div className="p-3 rounded-lg border border-primary/50 bg-primary/10">
+                      <p className="text-sm font-medium">Corte</p>
+                      <p className="text-xs text-muted-foreground">Serviço incluso no seu plano semanal</p>
+                    </div>
+                  ) : (
+                    <ServiceSelector
+                      value={newAppointment.service}
+                      onChange={(value) => setNewAppointment({ ...newAppointment, service: value })}
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">
