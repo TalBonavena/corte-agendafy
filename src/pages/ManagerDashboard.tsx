@@ -558,15 +558,6 @@ Se precisar reagendar, entre em contato conosco.`;
                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
                           <Button
                             size="sm"
-                            variant={appointment.status === "agendado" ? "default" : "outline"}
-                            onClick={() => updateAppointmentStatus(appointment.id, "agendado")}
-                            className="btn-futuristic h-7 sm:h-8 text-xs px-2 sm:px-3"
-                          >
-                            <Clock className="h-3 w-3 sm:mr-1" />
-                            <span className="hidden sm:inline">Agendado</span>
-                          </Button>
-                          <Button
-                            size="sm"
                             variant={appointment.status === "concluido" ? "default" : "outline"}
                             onClick={() => updateAppointmentStatus(appointment.id, "concluido")}
                             className="btn-futuristic h-7 sm:h-8 text-xs px-2 sm:px-3"
