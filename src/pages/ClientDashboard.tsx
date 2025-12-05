@@ -339,6 +339,29 @@ export default function ClientDashboard() {
         notes: newAppointment.notes,
       });
 
+      // Se for assinante, verificar se já tem corte na semana
+      if (subscription) {
+        const selectedDate = validatedData.date;
+        const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
+        const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
+
+        // Buscar agendamentos do assinante na semana selecionada
+        const { data: weekAppointments, error: weekError } = await supabase
+          .from("appointments")
+          .select("id")
+          .eq("client_id", user.id)
+          .neq("status", "cancelado")
+          .gte("scheduled_date", format(weekStart, "yyyy-MM-dd"))
+          .lte("scheduled_date", format(weekEnd, "yyyy-MM-dd"));
+
+        if (weekError) throw weekError;
+
+        if (weekAppointments && weekAppointments.length >= subscription.cuts_per_week) {
+          toast.error(`Você já tem ${subscription.cuts_per_week} corte(s) agendado(s) para esta semana. Seu plano permite apenas ${subscription.cuts_per_week} corte(s) por semana.`);
+          return;
+        }
+      }
+
       // Insert validated data
       const { error } = await supabase.from("appointments").insert({
         client_id: user.id,
