@@ -23,7 +23,8 @@ import {
   Ban,
   MessageCircle,
   Settings,
-  Menu
+  Menu,
+  Crown
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,10 +54,24 @@ interface Appointment {
   client_phone?: string | null;
 }
 
+interface Subscriber {
+  id: string;
+  client_id: string;
+  plan_name: string;
+  price: number;
+  cuts_per_week: number;
+  is_active: boolean;
+  subscribed_at: string;
+  client_name?: string;
+  client_email?: string;
+  client_phone?: string | null;
+}
+
 export default function ManagerDashboard() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalAppointments: 0,
@@ -78,6 +93,7 @@ export default function ManagerDashboard() {
   const menuItems = [
     { value: "appointments", label: "Agendamentos", icon: Calendar },
     { value: "clients", label: "Clientes", icon: Users },
+    { value: "subscribers", label: "Assinantes", icon: Crown },
     { value: "products", label: "Produtos", icon: Package },
     { value: "billing", label: "Faturamento", icon: DollarSign },
     { value: "settings", label: "Configurações", icon: Settings },
@@ -86,6 +102,7 @@ export default function ManagerDashboard() {
   useEffect(() => {
     fetchAppointments();
     fetchStats();
+    fetchSubscribers();
   }, []);
 
   useEffect(() => {
@@ -177,6 +194,41 @@ export default function ManagerDashboard() {
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchSubscribers = async () => {
+    try {
+      // Fetch active subscriptions
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("is_active", true)
+        .order("subscribed_at", { ascending: false });
+
+      if (subscriptionsError) throw subscriptionsError;
+
+      // Fetch all profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, name, email, phone");
+
+      if (profilesError) throw profilesError;
+
+      // Merge data
+      const subscribersWithProfiles = subscriptionsData?.map((sub) => {
+        const profile = profilesData?.find((p) => p.id === sub.client_id);
+        return {
+          ...sub,
+          client_name: profile?.name || "Desconhecido",
+          client_email: profile?.email || "",
+          client_phone: profile?.phone || null,
+        };
+      }) || [];
+
+      setSubscribers(subscribersWithProfiles);
+    } catch (error: any) {
+      console.error("Erro ao carregar assinantes:", error);
     }
   };
 
@@ -425,7 +477,7 @@ Se precisar reagendar, entre em contato conosco.`;
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full grid-cols-5 glass-panel h-auto p-1">
+          <TabsList className="hidden md:grid w-full grid-cols-6 glass-panel h-auto p-1">
             <TabsTrigger value="appointments" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Agendamentos</span>
@@ -434,6 +486,11 @@ Se precisar reagendar, entre em contato conosco.`;
             <TabsTrigger value="clients" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
               <Users className="h-4 w-4" />
               <span>Clientes</span>
+            </TabsTrigger>
+            <TabsTrigger value="subscribers" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
+              <Crown className="h-4 w-4 text-yellow-500" />
+              <span className="hidden sm:inline">Assinantes</span>
+              <span className="sm:hidden">Plano</span>
             </TabsTrigger>
             <TabsTrigger value="products" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
               <Package className="h-4 w-4" />
@@ -581,6 +638,70 @@ Se precisar reagendar, entre em contato conosco.`;
                     Gerenciar Clientes
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="subscribers" className="space-y-4">
+            <Card className="glass-panel">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-yellow-500" />
+                  Assinantes do Plano Cabelo Semanal
+                </CardTitle>
+                <CardDescription>
+                  Clientes com plano de R$ 80,00/mês - 1 corte por semana garantido
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {subscribers.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Crown className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhum assinante ativo no momento</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm text-muted-foreground">
+                        Total de assinantes: <strong>{subscribers.length}</strong>
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        Receita mensal: <strong>R$ {(subscribers.length * 80).toFixed(2).replace(".", ",")}</strong>
+                      </span>
+                    </div>
+                    {subscribers.map((subscriber) => (
+                      <div
+                        key={subscriber.id}
+                        className="p-4 rounded-lg border border-border bg-card/50 hover:bg-card transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold">{subscriber.client_name}</h3>
+                              <Crown className="h-4 w-4 text-yellow-500" />
+                            </div>
+                            <p className="text-sm text-muted-foreground">{subscriber.client_email}</p>
+                            {subscriber.client_phone && (
+                              <p className="text-sm text-muted-foreground">{subscriber.client_phone}</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-medium text-green-500">
+                              R$ {subscriber.price.toFixed(2).replace(".", ",")}/mês
+                            </span>
+                            <p className="text-xs text-muted-foreground">
+                              Desde {format(new Date(subscriber.subscribed_at), "dd/MM/yyyy", { locale: ptBR })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <span>{subscriber.cuts_per_week} corte(s) por semana</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
