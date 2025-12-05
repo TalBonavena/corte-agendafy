@@ -133,11 +133,11 @@ export default function ManagerDashboard() {
 
   const fetchAppointments = async () => {
     try {
-      // Fetch appointments (excluding canceled)
+      // Fetch appointments (excluding canceled and completed)
       const { data: appointmentsData, error: appointmentsError } = await supabase
         .from("appointments")
         .select("*")
-        .neq("status", "cancelado")
+        .eq("status", "agendado")
         .order("scheduled_date", { ascending: true })
         .order("scheduled_time", { ascending: true });
 
