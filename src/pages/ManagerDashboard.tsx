@@ -80,6 +80,7 @@ export default function ManagerDashboard() {
   });
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [cancelSubscriptionId, setCancelSubscriptionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("appointments");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -229,6 +230,25 @@ export default function ManagerDashboard() {
       setSubscribers(subscribersWithProfiles);
     } catch (error: any) {
       console.error("Erro ao carregar assinantes:", error);
+    }
+  };
+
+  const handleCancelSubscription = async (subscriptionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ is_active: false })
+        .eq("id", subscriptionId);
+
+      if (error) throw error;
+
+      toast.success("Assinatura cancelada com sucesso");
+      fetchSubscribers();
+    } catch (error: any) {
+      console.error("Erro ao cancelar assinatura:", error);
+      toast.error("Erro ao cancelar assinatura");
+    } finally {
+      setCancelSubscriptionId(null);
     }
   };
 
@@ -685,9 +705,20 @@ Se precisar reagendar, entre em contato conosco.`;
                             </p>
                           </div>
                         </div>
-                        <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                          <CheckCircle className="h-3 w-3 text-green-500" />
-                          <span>{subscriber.cuts_per_week} corte(s) por semana</span>
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                            <span>{subscriber.cuts_per_week} corte(s) por semana</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setCancelSubscriptionId(subscriber.id)}
+                            className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Cancelar
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -849,6 +880,26 @@ Se precisar reagendar, entre em contato conosco.`;
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!cancelSubscriptionId} onOpenChange={(open) => !open && setCancelSubscriptionId(null)}>
+        <AlertDialogContent className="glass-panel">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar Assinatura</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar esta assinatura? O cliente perderá acesso aos benefícios do plano semanal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => cancelSubscriptionId && handleCancelSubscription(cancelSubscriptionId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Cancelar Assinatura
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
