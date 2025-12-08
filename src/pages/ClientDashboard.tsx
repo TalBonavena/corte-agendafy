@@ -10,7 +10,7 @@ import { Calendar as CalendarIcon, LogOut, Clock, User, Mail, XCircle, Phone, Ed
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, startOfWeek, endOfWeek, addDays, isSameDay } from "date-fns";
+import { format, startOfWeek, endOfWeek, addDays, isSameDay, endOfMonth, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -54,6 +54,7 @@ interface Subscription {
   cuts_per_week: number;
   is_active: boolean;
   subscribed_at: string;
+  expires_at: string | null;
 }
 
 const profileSchema = z.object({
@@ -202,6 +203,7 @@ export default function ClientDashboard() {
     if (!user) return;
     
     try {
+      // Buscar assinatura ativa e não expirada
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
@@ -210,6 +212,21 @@ export default function ClientDashboard() {
         .maybeSingle();
 
       if (error) throw error;
+      
+      // Verificar se expirou
+      if (data && data.expires_at) {
+        const expiresAt = new Date(data.expires_at);
+        if (expiresAt < new Date()) {
+          // Expirou - desativar automaticamente
+          await supabase
+            .from("subscriptions")
+            .update({ is_active: false })
+            .eq("id", data.id);
+          setSubscription(null);
+          return;
+        }
+      }
+      
       setSubscription(data);
     } catch (error: any) {
       console.error("Erro ao carregar assinatura:", error);
@@ -220,6 +237,23 @@ export default function ClientDashboard() {
     if (!user) return;
     
     try {
+      // Verificar se já tem uma assinatura inativa (expirada)
+      const { data: existingSubscription } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("client_id", user.id)
+        .eq("is_active", false)
+        .maybeSingle();
+      
+      if (existingSubscription) {
+        toast.error("Seu plano expirou. Entre em contato com o gerente para reativar.");
+        setIsSubscribeDialogOpen(false);
+        return;
+      }
+
+      // Definir expiração para o fim do mês atual
+      const expiresAt = endOfMonth(new Date());
+
       const { error } = await supabase
         .from("subscriptions")
         .insert({
@@ -227,6 +261,7 @@ export default function ClientDashboard() {
           plan_name: "Plano Cabelo Semanal",
           price: 80.00,
           cuts_per_week: 1,
+          expires_at: format(expiresAt, "yyyy-MM-dd'T'23:59:59"),
         });
 
       if (error) throw error;
@@ -573,6 +608,20 @@ export default function ClientDashboard() {
                   <p className="text-sm text-muted-foreground">
                     Você tem direito a <strong>1 corte por semana</strong>. Seu calendário agora mostra visualização semanal.
                   </p>
+                  {subscription.expires_at && (
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
+                      <p className="text-sm font-medium text-primary">
+                        {differenceInDays(new Date(subscription.expires_at), new Date()) > 0 ? (
+                          <>Restam <strong>{differenceInDays(new Date(subscription.expires_at), new Date())}</strong> dias no seu plano</>
+                        ) : (
+                          <>Seu plano vence <strong>hoje</strong></>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Válido até: {format(new Date(subscription.expires_at), "dd/MM/yyyy", { locale: ptBR })}
+                      </p>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     Assinatura ativa desde: {format(new Date(subscription.subscribed_at), "dd/MM/yyyy", { locale: ptBR })}
                   </p>
