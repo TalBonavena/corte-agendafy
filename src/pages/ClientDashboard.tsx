@@ -266,9 +266,37 @@ export default function ClientDashboard() {
 
       if (error) throw error;
 
-      toast.success("Plano ativado com sucesso! Seu calendário agora mostra visualização semanal.");
+      toast.success("Plano ativado com sucesso! Aguardando pagamento.");
       setIsSubscribeDialogOpen(false);
       fetchSubscription();
+
+      // Enviar WhatsApp para o barbeiro notificando sobre a nova adesão
+      const clientName = profile?.name || "Cliente";
+      const dataExpiracao = format(expiresAt, "dd/MM/yyyy", { locale: ptBR });
+      
+      const mensagem = `🎉 *NOVA ADESÃO AO PLANO SEMANAL!*
+
+👤 *Cliente:* ${clientName}
+📧 *Email:* ${profile?.email || "N/A"}
+📱 *Telefone:* ${profile?.phone || "N/A"}
+
+💰 *Plano:* Plano Cabelo Semanal - R$ 80,00/mês
+📅 *Válido até:* ${dataExpiracao}
+
+⚠️ *Aguardando pagamento do cliente.*
+
+Entre em contato para confirmar o pagamento.`;
+
+      const mensagemCodificada = encodeURIComponent(mensagem);
+      const phoneNumber = "5516993358197";
+      
+      // Detectar se é mobile ou desktop
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const whatsappUrl = isMobile
+        ? `https://wa.me/${phoneNumber}?text=${mensagemCodificada}`
+        : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${mensagemCodificada}`;
+      
+      window.open(whatsappUrl, "_blank");
     } catch (error: any) {
       toast.error("Erro ao ativar plano");
       console.error(error);
