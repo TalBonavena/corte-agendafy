@@ -413,6 +413,34 @@ export default function ClientDashboard() {
       if (error) throw error;
 
       toast.success("Agendamento realizado com sucesso!");
+      
+      // Abrir WhatsApp com mensagem personalizada
+      const dataFormatada = format(validatedData.date, "dd/MM/yyyy", { locale: ptBR });
+      const horaFormatada = validatedData.time;
+      const clientName = profile?.name || "Cliente";
+      
+      const mensagem = `Olá! 👋
+
+Sou *${clientName}* e acabei de confirmar meu agendamento na *Innovation Barbershop*:
+
+📅 *Data:* ${dataFormatada}
+🕐 *Horário:* ${horaFormatada}
+✂️ *Serviço:* ${validatedData.service}
+💈 *Barbeiro:* ${validatedData.barber}
+
+Aguardo confirmação. Obrigado!`;
+
+      const mensagemCodificada = encodeURIComponent(mensagem);
+      const phoneNumber = "5516993358197";
+      
+      // Detectar se é mobile ou desktop
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const whatsappUrl = isMobile
+        ? `https://wa.me/${phoneNumber}?text=${mensagemCodificada}`
+        : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${mensagemCodificada}`;
+      
+      window.open(whatsappUrl, "_blank");
+      
       setNewAppointment({ service: "", barber: "", date: undefined, time: "", notes: "" });
       setAvailableSlots([]);
       fetchAppointments();
