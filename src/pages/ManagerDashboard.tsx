@@ -105,7 +105,7 @@ export default function ManagerDashboard() {
     { value: "products", label: "Produtos", icon: Package },
     { value: "billing", label: "Faturamento", icon: DollarSign },
     { value: "cashclosing", label: "Caixa", icon: Wallet },
-    { value: "settings", label: "Configurações", icon: Settings },
+    { value: "settings", label: "Msg do WhatsApp", icon: Settings },
   ];
 
   useEffect(() => {
@@ -586,8 +586,8 @@ Se precisar reagendar, entre em contato conosco.`;
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
               <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Configurações</span>
-              <span className="sm:hidden">Config</span>
+              <span className="hidden sm:inline">Msg do WhatsApp</span>
+              <span className="sm:hidden">WhatsApp</span>
             </TabsTrigger>
           </TabsList>
 
