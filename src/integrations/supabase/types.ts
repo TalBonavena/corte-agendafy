@@ -89,6 +89,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_closings: {
+        Row: {
+          closed_by: string
+          closing_date: string
+          created_at: string
+          expenses: number
+          expenses_description: string | null
+          final_balance: number
+          id: string
+          notes: string | null
+          opening_balance: number
+          other_income: number
+          products_revenue: number
+          services_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          closed_by: string
+          closing_date: string
+          created_at?: string
+          expenses?: number
+          expenses_description?: string | null
+          final_balance?: number
+          id?: string
+          notes?: string | null
+          opening_balance?: number
+          other_income?: number
+          products_revenue?: number
+          services_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          closed_by?: string
+          closing_date?: string
+          created_at?: string
+          expenses?: number
+          expenses_description?: string | null
+          final_balance?: number
+          id?: string
+          notes?: string | null
+          opening_balance?: number
+          other_income?: number
+          products_revenue?: number
+          services_revenue?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_sales: {
         Row: {
           cost_price: number

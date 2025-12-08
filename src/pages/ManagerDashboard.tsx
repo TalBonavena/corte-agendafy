@@ -24,7 +24,8 @@ import {
   MessageCircle,
   Settings,
   Menu,
-  Crown
+  Crown,
+  Wallet
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,7 @@ import ProductsManagement from "@/components/ProductsManagement";
 import BillingReport from "@/components/BillingReport";
 import ProductSale from "@/components/ProductSale";
 import WhatsAppSettings from "@/components/WhatsAppSettings";
+import CashClosing from "@/components/CashClosing";
 
 interface Appointment {
   id: string;
@@ -101,6 +103,7 @@ export default function ManagerDashboard() {
     { value: "subscribers", label: "Assinantes", icon: Crown },
     { value: "products", label: "Produtos", icon: Package },
     { value: "billing", label: "Faturamento", icon: DollarSign },
+    { value: "cashclosing", label: "Caixa", icon: Wallet },
     { value: "settings", label: "Configurações", icon: Settings },
   ];
 
@@ -882,6 +885,10 @@ Se precisar reagendar, entre em contato conosco.`;
 
           <TabsContent value="billing">
             <BillingReport />
+          </TabsContent>
+
+          <TabsContent value="cashclosing">
+            <CashClosing />
           </TabsContent>
 
           <TabsContent value="settings">
