@@ -83,6 +83,7 @@ export default function ManagerDashboard() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [cancelSubscriptionId, setCancelSubscriptionId] = useState<string | null>(null);
   const [reactivateSubscriptionId, setReactivateSubscriptionId] = useState<string | null>(null);
+  const [deleteSubscriptionId, setDeleteSubscriptionId] = useState<string | null>(null);
   const [expiredSubscribers, setExpiredSubscribers] = useState<Subscriber[]>([]);
   const [activeTab, setActiveTab] = useState("appointments");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -282,6 +283,25 @@ export default function ManagerDashboard() {
       toast.error("Erro ao reativar assinatura");
     } finally {
       setReactivateSubscriptionId(null);
+    }
+  };
+
+  const handleDeleteSubscription = async (subscriptionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .delete()
+        .eq("id", subscriptionId);
+
+      if (error) throw error;
+
+      toast.success("Assinatura excluída com sucesso");
+      fetchSubscribers();
+    } catch (error: any) {
+      console.error("Erro ao excluir assinatura:", error);
+      toast.error("Erro ao excluir assinatura");
+    } finally {
+      setDeleteSubscriptionId(null);
     }
   };
 
@@ -796,7 +816,16 @@ Se precisar reagendar, entre em contato conosco.`;
                                 )}
                               </div>
                             </div>
-                            <div className="mt-3 flex justify-end">
+                            <div className="mt-3 flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDeleteSubscriptionId(subscriber.id)}
+                                className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Excluir
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="default"
@@ -1009,6 +1038,26 @@ Se precisar reagendar, entre em contato conosco.`;
               className="btn-futuristic"
             >
               Reativar Assinatura
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deleteSubscriptionId} onOpenChange={(open) => !open && setDeleteSubscriptionId(null)}>
+        <AlertDialogContent className="glass-panel">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Assinatura</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir permanentemente esta assinatura? O cliente poderá criar uma nova assinatura depois.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteSubscriptionId && handleDeleteSubscription(deleteSubscriptionId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir Assinatura
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
