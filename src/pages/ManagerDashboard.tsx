@@ -29,7 +29,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { SERVICES, formatServiceDisplay, getServicePrice } from "@/lib/services";
@@ -62,6 +62,7 @@ interface Subscriber {
   cuts_per_week: number;
   is_active: boolean;
   subscribed_at: string;
+  expires_at: string | null;
   client_name?: string;
   client_email?: string;
   client_phone?: string | null;
@@ -81,6 +82,8 @@ export default function ManagerDashboard() {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [cancelSubscriptionId, setCancelSubscriptionId] = useState<string | null>(null);
+  const [reactivateSubscriptionId, setReactivateSubscriptionId] = useState<string | null>(null);
+  const [expiredSubscribers, setExpiredSubscribers] = useState<Subscriber[]>([]);
   const [activeTab, setActiveTab] = useState("appointments");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -200,11 +203,10 @@ export default function ManagerDashboard() {
 
   const fetchSubscribers = async () => {
     try {
-      // Fetch active subscriptions
+      // Fetch all subscriptions (active and inactive)
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from("subscriptions")
         .select("*")
-        .eq("is_active", true)
         .order("subscribed_at", { ascending: false });
 
       if (subscriptionsError) throw subscriptionsError;
@@ -216,8 +218,8 @@ export default function ManagerDashboard() {
 
       if (profilesError) throw profilesError;
 
-      // Merge data
-      const subscribersWithProfiles = subscriptionsData?.map((sub) => {
+      // Merge data with profiles
+      const allSubscribersWithProfiles = subscriptionsData?.map((sub) => {
         const profile = profilesData?.find((p) => p.id === sub.client_id);
         return {
           ...sub,
@@ -227,7 +229,12 @@ export default function ManagerDashboard() {
         };
       }) || [];
 
-      setSubscribers(subscribersWithProfiles);
+      // Separar ativos e expirados/inativos
+      const active = allSubscribersWithProfiles.filter((sub) => sub.is_active);
+      const expired = allSubscribersWithProfiles.filter((sub) => !sub.is_active);
+
+      setSubscribers(active);
+      setExpiredSubscribers(expired);
     } catch (error: any) {
       console.error("Erro ao carregar assinantes:", error);
     }
@@ -249,6 +256,32 @@ export default function ManagerDashboard() {
       toast.error("Erro ao cancelar assinatura");
     } finally {
       setCancelSubscriptionId(null);
+    }
+  };
+
+  const handleReactivateSubscription = async (subscriptionId: string) => {
+    try {
+      // Definir nova expiração para o fim do mês atual
+      const expiresAt = endOfMonth(new Date());
+
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ 
+          is_active: true,
+          expires_at: format(expiresAt, "yyyy-MM-dd'T'23:59:59"),
+          subscribed_at: new Date().toISOString(),
+        })
+        .eq("id", subscriptionId);
+
+      if (error) throw error;
+
+      toast.success("Assinatura reativada com sucesso");
+      fetchSubscribers();
+    } catch (error: any) {
+      console.error("Erro ao reativar assinatura:", error);
+      toast.error("Erro ao reativar assinatura");
+    } finally {
+      setReactivateSubscriptionId(null);
     }
   };
 
@@ -665,63 +698,119 @@ Se precisar reagendar, entre em contato conosco.`;
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {subscribers.length === 0 ? (
+                {subscribers.length === 0 && expiredSubscribers.length === 0 ? (
                   <div className="text-center py-8">
                     <Crown className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Nenhum assinante ativo no momento</p>
+                    <p className="text-muted-foreground">Nenhum assinante no momento</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm text-muted-foreground">
-                        Total de assinantes: <strong>{subscribers.length}</strong>
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        Receita mensal: <strong>R$ {(subscribers.length * 80).toFixed(2).replace(".", ",")}</strong>
-                      </span>
-                    </div>
-                    {subscribers.map((subscriber) => (
-                      <div
-                        key={subscriber.id}
-                        className="p-4 rounded-lg border border-border bg-card/50 hover:bg-card transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold">{subscriber.client_name}</h3>
-                              <Crown className="h-4 w-4 text-yellow-500" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">{subscriber.client_email}</p>
-                            {subscriber.client_phone && (
-                              <p className="text-sm text-muted-foreground">{subscriber.client_phone}</p>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-medium text-green-500">
-                              R$ {subscriber.price.toFixed(2).replace(".", ",")}/mês
-                            </span>
-                            <p className="text-xs text-muted-foreground">
-                              Desde {format(new Date(subscriber.subscribed_at), "dd/MM/yyyy", { locale: ptBR })}
-                            </p>
-                          </div>
+                  <div className="space-y-6">
+                    {/* Assinantes Ativos */}
+                    {subscribers.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm text-muted-foreground">
+                            Assinantes ativos: <strong>{subscribers.length}</strong>
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Receita mensal: <strong>R$ {(subscribers.length * 80).toFixed(2).replace(".", ",")}</strong>
+                          </span>
                         </div>
-                        <div className="mt-3 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <CheckCircle className="h-3 w-3 text-green-500" />
-                            <span>{subscriber.cuts_per_week} corte(s) por semana</span>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setCancelSubscriptionId(subscriber.id)}
-                            className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                        {subscribers.map((subscriber) => (
+                          <div
+                            key={subscriber.id}
+                            className="p-4 rounded-lg border border-green-500/30 bg-green-500/5 hover:bg-green-500/10 transition-colors"
                           >
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Cancelar
-                          </Button>
-                        </div>
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold">{subscriber.client_name}</h3>
+                                  <Crown className="h-4 w-4 text-yellow-500" />
+                                </div>
+                                <p className="text-sm text-muted-foreground">{subscriber.client_email}</p>
+                                {subscriber.client_phone && (
+                                  <p className="text-sm text-muted-foreground">{subscriber.client_phone}</p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-medium text-green-500">
+                                  R$ {subscriber.price.toFixed(2).replace(".", ",")}/mês
+                                </span>
+                                {subscriber.expires_at && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Expira: {format(new Date(subscriber.expires_at), "dd/MM/yyyy", { locale: ptBR })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-3 flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                                <span>{subscriber.cuts_per_week} corte(s) por semana</span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setCancelSubscriptionId(subscriber.id)}
+                                className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Cancelar
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+
+                    {/* Assinaturas Expiradas/Inativas */}
+                    {expiredSubscribers.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-muted-foreground border-t border-border pt-4">
+                          Assinaturas Expiradas ({expiredSubscribers.length})
+                        </h3>
+                        {expiredSubscribers.map((subscriber) => (
+                          <div
+                            key={subscriber.id}
+                            className="p-4 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-muted-foreground">{subscriber.client_name}</h3>
+                                  <Crown className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <p className="text-sm text-muted-foreground">{subscriber.client_email}</p>
+                                {subscriber.client_phone && (
+                                  <p className="text-sm text-muted-foreground">{subscriber.client_phone}</p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  Expirado
+                                </span>
+                                {subscriber.expires_at && (
+                                  <p className="text-xs text-destructive">
+                                    Expirou em: {format(new Date(subscriber.expires_at), "dd/MM/yyyy", { locale: ptBR })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-3 flex justify-end">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => setReactivateSubscriptionId(subscriber.id)}
+                                className="h-7 text-xs"
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Reativar Plano
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -900,6 +989,26 @@ Se precisar reagendar, entre em contato conosco.`;
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Cancelar Assinatura
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!reactivateSubscriptionId} onOpenChange={(open) => !open && setReactivateSubscriptionId(null)}>
+        <AlertDialogContent className="glass-panel">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reativar Assinatura</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja reativar esta assinatura? O plano será renovado até o final deste mês e o cliente terá acesso aos benefícios novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => reactivateSubscriptionId && handleReactivateSubscription(reactivateSubscriptionId)}
+              className="btn-futuristic"
+            >
+              Reativar Assinatura
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
