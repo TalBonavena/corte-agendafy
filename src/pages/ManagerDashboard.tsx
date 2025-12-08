@@ -553,7 +553,7 @@ Se precisar reagendar, entre em contato conosco.`;
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full grid-cols-6 glass-panel h-auto p-1">
+          <TabsList className="hidden md:grid w-full grid-cols-7 glass-panel h-auto p-1">
             <TabsTrigger value="appointments" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Agendamentos</span>
@@ -577,6 +577,11 @@ Se precisar reagendar, entre em contato conosco.`;
               <DollarSign className="h-4 w-4" />
               <span className="hidden sm:inline">Faturamento</span>
               <span className="sm:hidden">Fatur.</span>
+            </TabsTrigger>
+            <TabsTrigger value="cashclosing" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
+              <Wallet className="h-4 w-4" />
+              <span className="hidden sm:inline">Caixa</span>
+              <span className="sm:hidden">Caixa</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1 py-2 px-1 sm:px-3 text-[10px] sm:text-sm">
               <Settings className="h-4 w-4" />
