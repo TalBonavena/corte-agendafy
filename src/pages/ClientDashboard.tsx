@@ -421,7 +421,7 @@ export default function ClientDashboard() {
       
       const mensagem = `Olá! 👋
 
-Sou *${clientName}* e acabei de confirmar meu agendamento na *Innovation Barbershop*:
+Sou *${clientName}* e acabei de confirmar meu agendamento na *Barbearia Innovation Barbershop*:
 
 📅 *Data:* ${dataFormatada}
 🕐 *Horário:* ${horaFormatada}
