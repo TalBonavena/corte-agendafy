@@ -41,6 +41,7 @@ import BillingReport from "@/components/BillingReport";
 import ProductSale from "@/components/ProductSale";
 import WhatsAppSettings from "@/components/WhatsAppSettings";
 import CashClosing from "@/components/CashClosing";
+import ClientInsights from "@/components/ClientInsights";
 
 interface Appointment {
   id: string;
@@ -693,15 +694,18 @@ Se precisar reagendar, entre em contato conosco.`;
             </Card>
           </TabsContent>
 
-          <TabsContent value="clients">
+          <TabsContent value="clients" className="space-y-6">
+            {/* Client Insights */}
+            <ClientInsights />
+
+            {/* Link to full management */}
             <Card className="glass-panel">
               <CardHeader>
-                <CardTitle>Clientes</CardTitle>
-                <CardDescription>Gerencie os clientes cadastrados</CardDescription>
+                <CardTitle>Gerenciamento Completo</CardTitle>
+                <CardDescription>Acesse o painel completo de gestão de clientes</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <div className="text-center py-4">
                   <p className="text-muted-foreground mb-4">
                     Visualize o histórico completo de atendimentos e informações de contato dos clientes
                   </p>
