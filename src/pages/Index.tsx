@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users } from "lucide-react";
+import { Calendar, Clock, Users, MapPin } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 const Index = () => {
@@ -67,6 +67,18 @@ const Index = () => {
               Mantenha o histórico completo de atendimentos de cada cliente
             </p>
           </div>
+        </div>
+
+        <div className="mt-12 text-center">
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Av.+Pedro+Duarte+Amoroso,+2098+-+Francisco+Castilho"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+          >
+            <MapPin className="h-5 w-5" />
+            <span>Av. Pedro Duarte Amoroso, 2098 - Francisco Castilho</span>
+          </a>
         </div>
       </div>
     </div>;
