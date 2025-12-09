@@ -288,7 +288,7 @@ export default function ClientDashboard() {
 Entre em contato para confirmar o pagamento.`;
 
       const mensagemCodificada = encodeURIComponent(mensagem);
-      const phoneNumber = "16993358197";
+      const phoneNumber = "5516993358197";
       
       // Detectar se é mobile ou desktop
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
