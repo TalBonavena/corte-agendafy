@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DollarSign, TrendingUp, Package, Scissors, Plus, Trash2, Zap, Droplets, Wifi, MoreHorizontal } from "lucide-react";
-import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getServicePrice } from "@/lib/services";
 import { BARBERS } from "@/lib/barbers";
@@ -56,6 +56,8 @@ export default function BillingReport() {
   });
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [selectedBarber, setSelectedBarber] = useState<string>("all");
+  const [startMonth, setStartMonth] = useState(() => format(new Date(), "yyyy-MM"));
+  const [endMonth, setEndMonth] = useState(() => format(new Date(), "yyyy-MM"));
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [newExpense, setNewExpense] = useState({
@@ -68,7 +70,7 @@ export default function BillingReport() {
   useEffect(() => {
     fetchBillingStats();
     fetchExpenses();
-  }, [selectedPeriod, selectedBarber]);
+  }, [selectedPeriod, selectedBarber, startMonth, endMonth]);
 
   const getPeriodDates = () => {
     const now = new Date();
@@ -83,6 +85,12 @@ export default function BillingReport() {
         const lastMonth = subMonths(now, 1);
         startDate = startOfMonth(lastMonth);
         endDate = endOfMonth(lastMonth);
+        break;
+      case "custom":
+        const [startYear, startMonthNum] = startMonth.split("-").map(Number);
+        const [endYear, endMonthNum] = endMonth.split("-").map(Number);
+        startDate = new Date(startYear, startMonthNum - 1, 1);
+        endDate = endOfMonth(new Date(endYear, endMonthNum - 1, 1));
         break;
       case "all":
         startDate = new Date(2000, 0, 1);
@@ -262,6 +270,17 @@ export default function BillingReport() {
       case "last":
         periodText = format(subMonths(now, 1), "MMMM 'de' yyyy", { locale: ptBR });
         break;
+      case "custom":
+        const [startYear, startMonthNum] = startMonth.split("-").map(Number);
+        const [endYear, endMonthNum] = endMonth.split("-").map(Number);
+        const startDateParsed = new Date(startYear, startMonthNum - 1, 1);
+        const endDateParsed = new Date(endYear, endMonthNum - 1, 1);
+        if (startMonth === endMonth) {
+          periodText = format(startDateParsed, "MMMM 'de' yyyy", { locale: ptBR });
+        } else {
+          periodText = `${format(startDateParsed, "MMM/yy", { locale: ptBR })} - ${format(endDateParsed, "MMM/yy", { locale: ptBR })}`;
+        }
+        break;
       case "all":
         periodText = "Todo o período";
         break;
@@ -383,9 +402,27 @@ export default function BillingReport() {
             <SelectContent className="bg-background border-border">
               <SelectItem value="current">Mês Atual</SelectItem>
               <SelectItem value="last">Mês Anterior</SelectItem>
+              <SelectItem value="custom">Período Personalizado</SelectItem>
               <SelectItem value="all">Todo o Período</SelectItem>
             </SelectContent>
           </Select>
+          {selectedPeriod === "custom" && (
+            <div className="flex gap-2 items-center">
+              <Input
+                type="month"
+                value={startMonth}
+                onChange={(e) => setStartMonth(e.target.value)}
+                className="w-40"
+              />
+              <span className="text-muted-foreground">até</span>
+              <Input
+                type="month"
+                value={endMonth}
+                onChange={(e) => setEndMonth(e.target.value)}
+                className="w-40"
+              />
+            </div>
+          )}
         </div>
       </div>
 
