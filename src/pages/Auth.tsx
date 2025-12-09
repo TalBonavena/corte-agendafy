@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, Instagram } from "lucide-react";
 import { z } from "zod";
 import logo from "@/assets/logo.jpeg";
 
@@ -130,6 +130,15 @@ export default function Auth() {
             >
               <MessageCircle className="h-5 w-5" />
               Dúvidas? Fale conosco no WhatsApp
+            </a>
+            <a
+              href="https://www.instagram.com/innovation.barbearia?igsh=ZnBkMWh4amczZjJ1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mt-2 text-sm text-pink-500 hover:text-pink-400 transition-colors"
+            >
+              <Instagram className="h-5 w-5" />
+              @innovation.barbearia
             </a>
           </CardHeader>
           <CardContent>
