@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 import { z } from "zod";
 import logo from "@/assets/logo.jpeg";
 
@@ -122,6 +122,15 @@ export default function Auth() {
           <CardHeader>
             <CardTitle>Acesse sua conta</CardTitle>
             <CardDescription>Entre com suas credenciais ou crie uma nova conta</CardDescription>
+            <a
+              href="https://wa.me/5516993358197?text=Olá! Tenho uma dúvida sobre o sistema de agendamento."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mt-3 text-sm text-green-500 hover:text-green-400 transition-colors"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Dúvidas? Fale conosco no WhatsApp
+            </a>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
