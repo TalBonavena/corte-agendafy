@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, MapPin } from "lucide-react";
+import { Calendar, Clock, Users, MapPin, Instagram } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 const Index = () => {
@@ -69,7 +69,16 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center flex flex-col items-center gap-4">
+          <a
+            href="https://www.instagram.com/innovation.barbearia?igsh=ZnBkMWh4amczZjJ1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-pink-500 hover:text-pink-400 transition-colors"
+          >
+            <Instagram className="h-6 w-6" />
+            <span>@innovation.barbearia</span>
+          </a>
           <a
             href="https://www.google.com/maps/search/?api=1&query=Av.+Pedro+Duarte+Amoroso,+2098+-+Francisco+Castilho"
             target="_blank"
