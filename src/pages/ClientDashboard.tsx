@@ -57,6 +57,16 @@ interface Subscription {
   expires_at: string | null;
 }
 
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  cuts_per_week: number;
+  allowed_services: string[];
+  is_active: boolean;
+}
+
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter no mínimo 2 caracteres").max(100, "Nome muito longo"),
   phone: z.string()
@@ -89,6 +99,8 @@ export default function ClientDashboard() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isSubscribeDialogOpen, setIsSubscribeDialogOpen] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 0 }));
+  const [availablePlans, setAvailablePlans] = useState<SubscriptionPlan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   
   // Ref para armazenar valores atuais para os callbacks realtime
   const appointmentRef = useRef(newAppointment);
@@ -97,6 +109,7 @@ export default function ClientDashboard() {
     fetchProfile();
     fetchAppointments();
     fetchSubscription();
+    fetchAvailablePlans();
   }, [user]);
 
   useEffect(() => {
@@ -233,8 +246,23 @@ export default function ClientDashboard() {
     }
   };
 
+  const fetchAvailablePlans = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      setAvailablePlans(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar planos:", error);
+    }
+  };
+
   const handleSubscribe = async () => {
-    if (!user) return;
+    if (!user || !selectedPlan) return;
     
     try {
       // Verificar se já tem uma assinatura inativa (expirada)
@@ -258,9 +286,9 @@ export default function ClientDashboard() {
         .from("subscriptions")
         .insert({
           client_id: user.id,
-          plan_name: "Plano Cabelo Semanal",
-          price: 80.00,
-          cuts_per_week: 1,
+          plan_name: selectedPlan.name,
+          price: selectedPlan.price,
+          cuts_per_week: selectedPlan.cuts_per_week,
           expires_at: format(expiresAt, "yyyy-MM-dd'T'23:59:59"),
         });
 
@@ -268,19 +296,21 @@ export default function ClientDashboard() {
 
       toast.success("Plano ativado com sucesso! Aguardando pagamento.");
       setIsSubscribeDialogOpen(false);
+      setSelectedPlan(null);
       fetchSubscription();
 
       // Enviar WhatsApp para o barbeiro notificando sobre a nova adesão
       const clientName = profile?.name || "Cliente";
       const dataExpiracao = format(expiresAt, "dd/MM/yyyy", { locale: ptBR });
       
-      const mensagem = `🎉 *NOVA ADESÃO AO PLANO SEMANAL!*
+      const mensagem = `🎉 *NOVA ADESÃO AO PLANO!*
 
 👤 *Cliente:* ${clientName}
 📧 *Email:* ${profile?.email || "N/A"}
 📱 *Telefone:* ${profile?.phone || "N/A"}
 
-💰 *Plano:* Plano Cabelo Semanal - R$ 80,00/mês
+💰 *Plano:* ${selectedPlan.name} - R$ ${selectedPlan.price.toFixed(2)}/mês
+✂️ *Cortes por semana:* ${selectedPlan.cuts_per_week}
 📅 *Válido até:* ${dataExpiracao}
 
 ⚠️ *Aguardando pagamento do cliente.*
@@ -1031,38 +1061,83 @@ Aguardo confirmação. Obrigado!`;
       </Dialog>
 
       {/* Dialog de Assinatura */}
-      <AlertDialog open={isSubscribeDialogOpen} onOpenChange={setIsSubscribeDialogOpen}>
-        <AlertDialogContent className="glass-panel">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
+      <Dialog open={isSubscribeDialogOpen} onOpenChange={(open) => {
+        setIsSubscribeDialogOpen(open);
+        if (!open) setSelectedPlan(null);
+      }}>
+        <DialogContent className="glass-panel max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-yellow-500" />
-              Aderir ao Plano Cabelo Semanal
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
-              <p>Você está prestes a aderir ao plano de <strong>R$ 80,00/mês</strong>.</p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  1 corte garantido por semana
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  Calendário semanal exclusivo para agendamentos
-                </li>
-              </ul>
-              <p className="text-xs text-muted-foreground mt-2">
-                * O pagamento deve ser feito presencialmente na barbearia.
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSubscribe} className="btn-futuristic">
+              Escolha seu Plano
+            </DialogTitle>
+            <DialogDescription>
+              Selecione o plano que melhor atende suas necessidades
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            {availablePlans.length === 0 ? (
+              <p className="text-center text-muted-foreground">Nenhum plano disponível</p>
+            ) : (
+              availablePlans.map((plan) => (
+                <div
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan)}
+                  className={cn(
+                    "p-4 rounded-lg border-2 cursor-pointer transition-all",
+                    selectedPlan?.id === plan.id
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-foreground">{plan.name}</h3>
+                    <span className="text-lg font-bold text-primary">
+                      R$ {plan.price.toFixed(2)}
+                      <span className="text-xs text-muted-foreground">/mês</span>
+                    </span>
+                  </div>
+                  {plan.description && (
+                    <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
+                  )}
+                  <ul className="space-y-1 text-sm">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      {plan.cuts_per_week} corte(s) por semana
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      Serviços: {plan.allowed_services.join(", ")}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      Calendário semanal exclusivo
+                    </li>
+                  </ul>
+                </div>
+              ))
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            * O pagamento deve ser feito presencialmente na barbearia.
+          </p>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSubscribeDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSubscribe} 
+              className="btn-futuristic"
+              disabled={!selectedPlan}
+            >
               Confirmar Adesão
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
