@@ -163,10 +163,28 @@ export default function ClientDashboard() {
       )
       .subscribe();
 
+    // Configurar realtime para subscription_plans (preços e planos)
+    const plansChannel = supabase
+      .channel('plans-realtime-client')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscription_plans'
+        },
+        (payload) => {
+          console.log('🔄 Plan change detected:', payload);
+          fetchAvailablePlans();
+        }
+      )
+      .subscribe();
+
     // Cleanup ao desmontar componente
     return () => {
       supabase.removeChannel(appointmentsChannel);
       supabase.removeChannel(blocksChannel);
+      supabase.removeChannel(plansChannel);
     };
   }, []);
 
