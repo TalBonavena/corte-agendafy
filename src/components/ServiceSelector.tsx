@@ -1,10 +1,19 @@
-import { useState } from "react";
-import { SERVICES, Service } from "@/lib/services";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Scissors, Check, ChevronDown } from "lucide-react";
+import { Clock, Scissors, Check, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Service {
+  id: string;
+  name: string;
+  duration: string;
+  price: number;
+  is_active: boolean;
+  display_order: number;
+}
 
 interface ServiceSelectorProps {
   value: string;
@@ -13,7 +22,31 @@ interface ServiceSelectorProps {
 
 export default function ServiceSelector({ value, onChange }: ServiceSelectorProps) {
   const [open, setOpen] = useState(false);
-  const selectedService = SERVICES.find(s => s.name === value);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      setServices(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar serviços:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectedService = services.find(s => s.name === value);
 
   const handleSelect = (serviceName: string) => {
     onChange(serviceName);
@@ -21,12 +54,16 @@ export default function ServiceSelector({ value, onChange }: ServiceSelectorProp
   };
 
   // Agrupar serviços por tipo
-  const simpleServices = SERVICES.filter(s => 
+  const simpleServices = services.filter(s => 
     !s.name.includes("+") && !s.name.includes("Cone")
   );
-  const comboServices = SERVICES.filter(s => 
+  const comboServices = services.filter(s => 
     s.name.includes("+") || s.name.includes("Cone")
   );
+
+  const formatPrice = (price: number) => {
+    return `R$ ${price.toFixed(2).replace(".", ",")}`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -40,11 +77,16 @@ export default function ServiceSelector({ value, onChange }: ServiceSelectorProp
             !value && "text-muted-foreground"
           )}
         >
-          {selectedService ? (
+          {loading ? (
+            <span className="flex items-center gap-2 text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Carregando...
+            </span>
+          ) : selectedService ? (
             <div className="flex flex-col items-start gap-0.5">
               <span className="text-sm font-medium">{selectedService.name}</span>
               <span className="text-xs text-muted-foreground">
-                {selectedService.duration} • {selectedService.price}
+                {selectedService.duration} • {formatPrice(selectedService.price)}
               </span>
             </div>
           ) : (
@@ -66,41 +108,59 @@ export default function ServiceSelector({ value, onChange }: ServiceSelectorProp
         
         <ScrollArea className="max-h-[60vh]">
           <div className="p-4 space-y-4">
-            {/* Serviços Simples */}
-            <div className="animate-fade-in">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Serviços Básicos
-              </h3>
-              <div className="grid gap-2">
-                {simpleServices.map((service, index) => (
-                  <ServiceCard
-                    key={service.name}
-                    service={service}
-                    isSelected={value === service.name}
-                    onSelect={handleSelect}
-                    delay={index * 50}
-                  />
-                ))}
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
-            </div>
+            ) : services.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum serviço disponível
+              </p>
+            ) : (
+              <>
+                {/* Serviços Simples */}
+                {simpleServices.length > 0 && (
+                  <div className="animate-fade-in">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      Serviços Básicos
+                    </h3>
+                    <div className="grid gap-2">
+                      {simpleServices.map((service, index) => (
+                        <ServiceCard
+                          key={service.id}
+                          service={service}
+                          isSelected={value === service.name}
+                          onSelect={handleSelect}
+                          delay={index * 50}
+                          formatPrice={formatPrice}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {/* Combos */}
-            <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Combos & Especiais
-              </h3>
-              <div className="grid gap-2">
-                {comboServices.map((service, index) => (
-                  <ServiceCard
-                    key={service.name}
-                    service={service}
-                    isSelected={value === service.name}
-                    onSelect={handleSelect}
-                    delay={(simpleServices.length + index) * 50}
-                  />
-                ))}
-              </div>
-            </div>
+                {/* Combos */}
+                {comboServices.length > 0 && (
+                  <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      Combos & Especiais
+                    </h3>
+                    <div className="grid gap-2">
+                      {comboServices.map((service, index) => (
+                        <ServiceCard
+                          key={service.id}
+                          service={service}
+                          isSelected={value === service.name}
+                          onSelect={handleSelect}
+                          delay={(simpleServices.length + index) * 50}
+                          formatPrice={formatPrice}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </ScrollArea>
       </DialogContent>
@@ -113,9 +173,10 @@ interface ServiceCardProps {
   isSelected: boolean;
   onSelect: (name: string) => void;
   delay?: number;
+  formatPrice: (price: number) => string;
 }
 
-function ServiceCard({ service, isSelected, onSelect, delay = 0 }: ServiceCardProps) {
+function ServiceCard({ service, isSelected, onSelect, delay = 0, formatPrice }: ServiceCardProps) {
   return (
     <button
       onClick={() => onSelect(service.name)}
@@ -156,7 +217,7 @@ function ServiceCard({ service, isSelected, onSelect, delay = 0 }: ServiceCardPr
             ? "bg-primary text-primary-foreground scale-105" 
             : "bg-secondary text-secondary-foreground"
         )}>
-          {service.price}
+          {formatPrice(service.price)}
         </div>
       </div>
     </button>
