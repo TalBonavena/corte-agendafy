@@ -677,7 +677,7 @@ Aguardo confirmação. Obrigado!`;
             <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
-                Plano Cabelo Semanal
+                {subscription ? subscription.plan_name : "Planos de Assinatura"}
               </CardTitle>
               {subscription ? (
                 <span className="flex items-center gap-1 text-xs sm:text-sm text-green-500 font-medium">
@@ -690,7 +690,10 @@ Aguardo confirmação. Obrigado!`;
               {subscription ? (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Você tem direito a <strong>1 corte por semana</strong>. Seu calendário agora mostra visualização semanal.
+                    Você tem direito a <strong>{subscription.cuts_per_week} corte(s) por semana</strong>. Seu calendário agora mostra visualização semanal.
+                  </p>
+                  <p className="text-sm font-medium text-primary">
+                    R$ {subscription.price.toFixed(2).replace(".", ",")}/mês
                   </p>
                   {subscription.expires_at && (
                     <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
@@ -720,26 +723,39 @@ Aguardo confirmação. Obrigado!`;
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      1 corte garantido por semana
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      Calendário semanal exclusivo
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      Economia de até R$ 40,00/mês
-                    </li>
-                  </ul>
+                  {availablePlans.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Carregando planos...</p>
+                  ) : (
+                    <>
+                      <div className="grid gap-2">
+                        {availablePlans.slice(0, 2).map((plan) => (
+                          <div key={plan.id} className="p-3 rounded-lg border border-border bg-card/50">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium text-sm">{plan.name}</span>
+                              <span className="text-primary font-bold text-sm">
+                                R$ {plan.price.toFixed(2).replace(".", ",")}
+                                <span className="text-xs text-muted-foreground">/mês</span>
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {plan.cuts_per_week} corte(s)/semana • {plan.allowed_services.join(", ")}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      {availablePlans.length > 2 && (
+                        <p className="text-xs text-muted-foreground text-center">
+                          +{availablePlans.length - 2} plano(s) disponível(is)
+                        </p>
+                      )}
+                    </>
+                  )}
                   <Button 
                     onClick={() => setIsSubscribeDialogOpen(true)} 
                     className="w-full btn-futuristic"
                   >
                     <Crown className="mr-2 h-4 w-4" />
-                    Aderir ao Plano
+                    Ver Planos e Aderir
                   </Button>
                 </div>
               )}
