@@ -55,6 +55,42 @@ export default function PriceSettings() {
 
   useEffect(() => {
     fetchData();
+
+    // Configurar realtime para atualizar automaticamente
+    const servicesChannel = supabase
+      .channel('services-realtime-admin')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'services'
+        },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    const plansChannel = supabase
+      .channel('plans-realtime-admin')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscription_plans'
+        },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(servicesChannel);
+      supabase.removeChannel(plansChannel);
+    };
   }, []);
 
   const fetchData = async () => {
