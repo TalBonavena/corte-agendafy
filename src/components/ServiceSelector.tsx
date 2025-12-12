@@ -27,6 +27,26 @@ export default function ServiceSelector({ value, onChange }: ServiceSelectorProp
 
   useEffect(() => {
     fetchServices();
+
+    // Configurar realtime para atualizar serviços automaticamente
+    const channel = supabase
+      .channel('services-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'services'
+        },
+        () => {
+          fetchServices();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchServices = async () => {
