@@ -39,7 +39,7 @@ import logo from "@/assets/logo.jpeg";
 import ProductsManagement from "@/components/ProductsManagement";
 import BillingReport from "@/components/BillingReport";
 import ProductSale from "@/components/ProductSale";
-import WhatsAppSettings from "@/components/WhatsAppSettings";
+import PriceSettings from "@/components/PriceSettings";
 import CashClosing from "@/components/CashClosing";
 import ClientInsights from "@/components/ClientInsights";
 
@@ -105,7 +105,7 @@ export default function ManagerDashboard() {
     { value: "products", label: "Produtos", icon: Package },
     { value: "billing", label: "Faturamento", icon: DollarSign },
     { value: "cashclosing", label: "Caixa", icon: Wallet },
-    { value: "settings", label: "Msg do WhatsApp", icon: Settings },
+    { value: "settings", label: "Configuração Preços", icon: Settings },
   ];
 
   useEffect(() => {
@@ -901,7 +901,7 @@ Se precisar reagendar, entre em contato conosco.`;
           </TabsContent>
 
           <TabsContent value="settings">
-            <WhatsAppSettings />
+            <PriceSettings />
           </TabsContent>
         </Tabs>
       </main>
