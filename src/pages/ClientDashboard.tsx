@@ -684,9 +684,7 @@ Aguardo confirmação. Obrigado!`;
                   <Check className="h-4 w-4" />
                   Ativo
                 </span>
-              ) : (
-                <span className="text-lg sm:text-xl font-bold text-primary">R$ 80,00</span>
-              )}
+              ) : null}
             </CardHeader>
             <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               {subscription ? (
